@@ -95,16 +95,16 @@ def gen_spectrogram(wav):
     return spec
 
 
-def s_matrix(segment, point_sec_sliced_path):
+def s_matrix(segment, point_sec_sliced_path, multiplication):
     spec_name = os.listdir(point_sec_sliced_path)
     spec_name.sort()
 
     cnt = 0
     s_pieces = []
-    # every 1000 datapoint belongs to the same category
+    # every 100 datapoint belongs to the same category
     # i = 0 means it will transfer filename_1_0 ~ filename_9_99 into spectrogram
     # and execute the concatenation  
-    for filename in spec_name[(segment)*100 : (segment+1)*100]: 
+    for filename in spec_name[(segment)* 100 * multiplication : (segment+1) * 100 * multiplication]: 
         spec = gen_spectrogram(point_sec_sliced_path + filename)
         s_pieces.append(spec)
         
