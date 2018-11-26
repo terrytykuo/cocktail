@@ -125,7 +125,10 @@ def big_matrix():
     big_matrix = np.vstack((big_pieces))
     return big_matrix
 
-def mix(s_pieces1, s_pieces2):
-    m = (s_pieces1 * s_pieces2) / (s_pieces1 + s_pieces2)
+def mix(audio_source):
+    pieces1, pieces2 = np.random.choice(audio_source, 2)
+    m = (pieces1 * pieces2) / (pieces1 + pieces2)
+    pc1 = audio_source.index(pieces1)
+    pc2 = audio_source.index(pieces2)
     
-    return m
+    return m, pc1, pc2
