@@ -102,8 +102,7 @@ def s_matrix(segment, point_sec_sliced_path, multiplication):
     cnt = 0
     s_pieces = []
     # every 100 datapoint belongs to the same category
-    # i = 0 means it will transfer filename_1_0 ~ filename_9_99 into spectrogram
-    # and execute the concatenation  
+    # i = 0 means it will transfer filename_1_0 ~ filename_1_99 into spectrograms and concatenate them 
     for filename in spec_name[(segment)* 100 * multiplication : (segment+1) * 100 * multiplication]: 
         spec = gen_spectrogram(point_sec_sliced_path + filename)
         s_pieces.append(spec)
@@ -113,6 +112,7 @@ def s_matrix(segment, point_sec_sliced_path, multiplication):
             print (cnt)
     # concatenate filename_1_0 ~ filename_9_99 into a matrix
     s_matrix = np.stack([s_pieces])
+    
     return s_matrix
 
 
@@ -125,9 +125,15 @@ def big_matrix():
     big_matrix = np.vstack((big_pieces))
     return big_matrix
 
+# seems useless now :ppppp
 def mix(audio_source):
+    # randomly select 2 audio source with the list
     pieces1, pieces2 = np.random.choice(audio_source, 2)
+    
+    # normalize the 2 mixed audios
     m = (pieces1 * pieces2) / (pieces1 + pieces2)
+    
+    # return the index
     pc1 = audio_source.index(pieces1)
     pc2 = audio_source.index(pieces2)
     

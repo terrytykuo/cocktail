@@ -30,7 +30,7 @@ block_path = '/home/tk/Documents/blocks/'
 multiplication = 1
 
 # blocks 
-blocks_volume = 70
+blocks_volume = 50
 
 #======================================================================
 
@@ -40,6 +40,7 @@ if ".DS_Store" in audio_list:
     audio_list.remove(".DS_Store")
 print ("There are", len(audio_list), "fully concatenated files")
 
+
 for p in range(blocks_volume):
 
     # remove current files 
@@ -48,15 +49,15 @@ for p in range(blocks_volume):
         os.remove(point_sec_sliced_path + c)
 
     pieces = p # controls which 10 sec segments will be processed 0.1 sec slicing 
-               # pieces = 0 means 0~10, 
-               # pieces = 1 means 10~20, etc.
+               # pieces = 0 means the 1st 10-sec file, 
+               # pieces = 1 means the 2nd 10-sec file, etc.
 
     ## 0.1 sec slicing
     print ('slicing', p, 'segment now')
     file_name = []
     for i in audio_list:
         slice_name = i[:-4]
-        file_name.append(slice_name)
+        file_name.append(slice_name) # generate 0.1 sec file list
 
     for file in file_name:
         for i in range(pieces * multiplication , (pieces + 1) * multiplication):
@@ -74,12 +75,36 @@ for p in range(blocks_volume):
 
     big_pieces = []
     for i in range(10):
-        print (i, 'column done')
         big_pieces.append(data_process.s_matrix(i, point_sec_sliced_path, multiplication))
-
+        print ('column',i, 'done')
+        
+    ## concatenate each column into a big_matrix 
     big_matrix = np.vstack((big_pieces))
-    print (big_matrix.shape)
+    
+    ## generate the mixed column, and concatenate it with original big_matrix
+    mixed_column = []
+    index_record = []
+    for i in range(len(big_matrix[1])):
+        pc1, pc2 = np.random.choice([0,1,2,3,4,5,6,7,8,9], 2)
+        mixed_spec = (big_matrix[pc1][i] * big_matrix[pc2][i])/ (big_matrix[pc1][i] + big_matrix[pc2][i])
+        mixed_column.append(mixed_spec)
+        index_record.append([pc1, pc2])
 
-    ## big_matrix --> json
-    jh = open(block_path + "block" + str(p) + '.json', 'w')
-    json.dump(big_matrix.tolist(), jh)
+    mixed_column = np.stack([mixed_column])
+
+    print (big_matrix.shape)
+    print ('mixed_column shape =', mixed_column.shape)
+    
+    big_matrix = np.vstack([big_matrix, mixed_column])
+    index_record = np.vstack([index_record])
+
+    print ("big_matrix shape =", big_matrix.shape)
+    print ('index_record shape =', index_record.shape)
+
+    ## x_train = big_matrix --> json
+    ## y_train = index_record --> json
+    with open(block_path + "block" + str(p) + '.json', 'w') as jh:
+        json.dump(big_matrix.tolist(), jh)
+    
+    with open(block_path + "index" + str(p) + '.json', 'w') as f:
+        json.dump(index_record.tolist(), f)
