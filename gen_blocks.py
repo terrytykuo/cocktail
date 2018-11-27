@@ -69,42 +69,53 @@ for p in range(blocks_volume):
     if len(spec_name) == 1000 * multiplication: 
         print ("checked")
     spec_name.sort()
-
+    
+    
+    
     ## Generate Spectrogram and concatenate 
     print ('generating spectrogram now')
 
-    big_pieces = []
-    for i in range(10):
-        big_pieces.append(data_process.s_matrix(i, point_sec_sliced_path, multiplication))
-        print ('column',i, 'done')
-        
-    ## concatenate each column into a big_matrix 
-    big_matrix = np.vstack((big_pieces))
-    
-    ## generate the mixed column, and concatenate it with original big_matrix
-    mixed_column = []
-    index_record = []
-    for i in range(len(big_matrix[1])):
+    big_pcs = []
+    all_index = []
+
+    for i in range(100):
+        small_pcs = []
+        index_record = []
+
+        for j in range(0 + i, 1000 + i, 100):
+            spec = data_process.gen_spectrogram(point_sec_sliced_path + spec_name[i])
+            small_pcs.append(spec)
+
+        # generate mixed column
+        mixed = []
+        index_record = []
         pc1, pc2 = np.random.choice([0,1,2,3,4,5,6,7,8,9], 2)
-        mixed_spec = (big_matrix[pc1][i] * big_matrix[pc2][i])/ (big_matrix[pc1][i] + big_matrix[pc2][i])
-        mixed_column.append(mixed_spec)
+
+        mixed_spec = (small_pcs[pc1] * small_pcs[pc2])/ (small_pcs[pc1] + small_pcs[pc2])
+
+        # append mixed spec into small_pcs
+        small_pcs.append(mixed_spec)
+
+        # record index
         index_record.append([pc1, pc2])
+        single_row = np.vstack([small_pcs])    
 
-    mixed_column = np.stack([mixed_column])
+        big_pcs.append(single_row)
+        all_index.append(index_record)
+        
+        if i % 10 == 0:
+            print (i, "row done")
 
-    print (big_matrix.shape)
-    print ('mixed_column shape =', mixed_column.shape)
-    
-    big_matrix = np.vstack([big_matrix, mixed_column])
-    index_record = np.vstack([index_record])
+    big_matrix = np.vstack([big_pcs])
+    print ("big_matrix shape = ", big_matrix.shape)
+    index_matrix = np.vstack(all_index)
+    print ("index_matrix shape = ", index_matrix.shape)
 
-    print ("big_matrix shape =", big_matrix.shape)
-    print ('index_record shape =', index_record.shape)
-
+    print ("The", p, "th block done. Start writing .json file")
     ## x_train = big_matrix --> json
     ## y_train = index_record --> json
     with open(block_path + "block" + str(p) + '.json', 'w') as jh:
         json.dump(big_matrix.tolist(), jh)
     
     with open(block_path + "index" + str(p) + '.json', 'w') as f:
-        json.dump(index_record.tolist(), f)
+        json.dump(index_matrix.tolist(), f)
