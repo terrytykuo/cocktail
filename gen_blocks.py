@@ -33,7 +33,7 @@ labels_path = '/home/tk/Documents/clean_labels/'
 multiplication = 1
 
 # blocks 
-blocks_volume = 10
+blocks_volume = 1
 
 #======================================================================
 
@@ -72,14 +72,17 @@ for p in range(blocks_volume):
         print ("checked")
     spec_name.sort()
     
+    with open(block_path + 'spec_name.txt', 'w') as t:
+        t.write(str(spec_name))
+        
     small_pcs = []
     pc = []
-    for i in range(1000):
+    for i in range(1000 * multiplication):
         spec = data_process.gen_spectrogram(point_sec_sliced_path + spec_name[i])
         small_pcs.append(spec) # record spectrograms
         
         # one-hot encoding
-        index = int(i/100)
+        index = int(i/(100 * multiplication))
         z = np.zeros((10))
         z[index] = 1
         pc.append(z) # record indexs
@@ -92,6 +95,7 @@ for p in range(blocks_volume):
     print ("index_matrix shape = ", index_matrix.shape)
 
     print ("The", p, "th block done. Start writing .json file")
+    
     ## x_train = big_matrix --> json
     ## y_train = index_record --> json
     with open(block_path + "clean" + str(p) + '.json', 'w') as jh:

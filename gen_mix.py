@@ -122,6 +122,7 @@ for p in range(blocks_volume):
     print ("The", p, "th block done. Start writing .json file")
     ## x_train = big_matrix --> json
     ## y_train = index_record --> json
+    
     with open(mix_path + "mix" + str(p) + '.json', 'w') as jh:
         json.dump(big_matrix.tolist(), jh)
     
