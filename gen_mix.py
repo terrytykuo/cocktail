@@ -23,17 +23,15 @@ sec10_sliced_path = '/home/tk/Documents/slice_10sec/'
 # 0.1 sec slices will be stored here
 point_sec_sliced_path = '/home/tk/Documents/slice_pointsec/' 
 
-# clean audios will be stored here
-block_path = '/home/tk/Documents/clean/'  
-
-# clean labels will be stored here
-labels_path = '/home/tk/Documents/clean_labels/' 
+# block will be stored here
+mix_path = '/home/tk/Documents/mix/'  
+label_path = '/home/tk/Documents/mix_labels/'
 
 # controls datapoint in single column
 multiplication = 1
 
 # blocks 
-blocks_volume = 10
+blocks_volume = 2
 
 #======================================================================
 
@@ -72,32 +70,60 @@ for p in range(blocks_volume):
         print ("checked")
     spec_name.sort()
     
-    small_pcs = []
-    pc = []
-    for i in range(1000):
-        spec = data_process.gen_spectrogram(point_sec_sliced_path + spec_name[i])
-        small_pcs.append(spec) # record spectrograms
-        
-        # one-hot encoding
-        index = int(i/100)
-        z = np.zeros((10))
-        z[index] = 1
-        pc.append(z) # record indexs
-        print ("i =", i, "; index =", index ,"\n", "z =",z)
     
-    big_matrix = np.stack(small_pcs)
-    index_matrix = np.stack(pc)
+    
+    ## Generate Spectrogram and concatenate 
+    print ('generating spectrogram now')
 
+    big_pcs = []
+    all_index = []
+
+    for i in range(100 * multiplication):
+        small_pcs = []
+        index_record = []
+        mix_pcs = []
+
+        for j in range(0 + i, 1000 * multiplication + i, 100 * multiplication):
+            spec = data_process.gen_spectrogram(point_sec_sliced_path + spec_name[i])
+            small_pcs.append(spec)
+
+        # generate mixed column
+        mixed = []
+        index_record = []
+        pc1, pc2 = np.random.choice([0,1,2,3,4,5,6,7,8,9], 2, replace = False)
+
+        mixed_spec = (small_pcs[pc1] * small_pcs[pc2])/ (small_pcs[pc1] + small_pcs[pc2])
+
+        # append mixed spec into small_pcs
+        mix_pcs.append(mixed_spec)
+       
+        
+        # record index
+        ## turn [pc1, pc2] into one-hot encoding
+        z = np.zeros((10,))
+        z[pc1] = 1
+        z[pc2] = 1
+        print ("pc1 = ", pc1, "pc2 = ", pc2, "\n", "z = " ,z)
+        index_record.append(z)
+        
+        single_row = np.stack(mix_pcs)    
+
+        big_pcs.append(single_row)
+        all_index.append(index_record)
+        
+        if i % 10 == 0:
+            print (i, "row done")
+
+    big_matrix = np.vstack(big_pcs)
     print ("big_matrix shape = ", big_matrix.shape)
+    index_matrix = np.vstack(all_index)
     print ("index_matrix shape = ", index_matrix.shape)
 
     print ("The", p, "th block done. Start writing .json file")
     ## x_train = big_matrix --> json
     ## y_train = index_record --> json
-    with open(block_path + "clean" + str(p) + '.json', 'w') as jh:
+    with open(mix_path + "mix" + str(p) + '.json', 'w') as jh:
         json.dump(big_matrix.tolist(), jh)
     
-    with open(labels_path + "clean_label" + str(p) + '.json', 'w') as f:
+    with open(label_path + "mix_label" + str(p) + '.json', 'w') as f:
         json.dump(index_matrix.tolist(), f)
-        
-    print (".json done")
