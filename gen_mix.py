@@ -31,7 +31,7 @@ label_path = '/home/tk/Documents/mix_labels/'
 multiplication = 1
 
 # blocks 
-blocks_volume = 2
+blocks_volume = 1
 
 #======================================================================
 
