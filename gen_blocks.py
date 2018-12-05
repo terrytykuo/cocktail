@@ -33,7 +33,7 @@ labels_path = '/home/tk/Documents/clean_labels/'
 multiplication = 1
 
 # blocks 
-blocks_volume = 1
+blocks_volume = 5
 
 #======================================================================
 
@@ -72,8 +72,6 @@ for p in range(blocks_volume):
         print ("checked")
     spec_name.sort()
     
-    with open(block_path + 'spec_name.txt', 'w') as t:
-        t.write(str(spec_name))
         
     small_pcs = []
     pc = []
