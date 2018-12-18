@@ -89,6 +89,7 @@ def gen_spectrogram(wav):
     
     fs, x = scipy.io.wavfile.read(wav) # read audio file as np array
     spec, _, _, _= plt.specgram(x, Fs=fs, NFFT=2048, noverlap=1900)
+    spec = spec[:500,:]
     plt.close('all')
     gc.collect()
 

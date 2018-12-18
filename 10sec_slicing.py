@@ -29,7 +29,7 @@ import scipy
 import scipy.io.wavfile
 import numpy as np
 import json
-
+import data_process
 
 # parameters:
 
@@ -57,7 +57,7 @@ if ".DS_Store" in audio_list:
 print ("There are", len(audio_list), "fully concatenated files")
 
 for audio in audio_list:
-     data_process.slice_it(audio, full_audio_path, 10_sec_sliced_path, length = 10000)
+    data_process.slice_it(audio, full_audio_path, sec10_sliced_path, length = 10000)
     print ('done slicing')
 
 
@@ -74,18 +74,10 @@ for i in audio_list:
 for file in file_name:
     for i in range(pieces * 10, (pieces + 1) * 10):
         name = file + "_{0}.wav".format(i)
-         data_process.slice_it(name, 10_sec_sliced_path, point_sec_sliced_path, length = 100)
+        data_process.slice_it(name, sec10_sliced_path, point_sec_sliced_path, length = 100)
 
 ## checkpoint: spec_name should have 10,000 files
 spec_name = os.listdir(point_sec_sliced_path)
 spec_name.sort()
 if len(spec_name) == 10000:
 	print ("10000 checked!")
-
-## Generate Spectrogram and concatenate
-from data_process import gen_spectrogram
-big_matrix = data_process.big_matrix()
-
-## big_matrix --> json
-jh = open("~/Documents/blocks/" + "block0" + '.json', 'w')
-json.dump(big_matrix.tolist(), jh)
