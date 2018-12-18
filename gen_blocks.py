@@ -13,7 +13,7 @@ import data_process
 
 
 
-server = True
+server = False
 
 root_dir = '/home/tk/Documents/'
 if server == True:
@@ -43,7 +43,7 @@ labels_path = root_dir + 'clean_labels/'
 multiplication = 1
 
 # blocks 
-blocks_volume = 50
+blocks_volume = 25
 
 #minimum audio length
 length = 0.5
@@ -108,10 +108,10 @@ for p in range(blocks_volume):
     
     ## x_train = big_matrix --> json
     ## y_train = index_record --> json
-    with open(block_path + str(p) + '.json', 'w') as jh:
+    with open(block_path + "clean" + str(p) + '.json', 'w') as jh:
         json.dump(big_matrix.tolist(), jh)
     
-    with open(labels_path + str(p) + '.json', 'w') as f:
+    with open(labels_path + "clean_label" + str(p) + '.json', 'w') as f:
         json.dump(index_matrix.tolist(), f)
         
     print (".json done")
