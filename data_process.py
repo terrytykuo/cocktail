@@ -89,11 +89,15 @@ def gen_spectrogram(wav):
     
     fs, x = scipy.io.wavfile.read(wav) # read audio file as np array
     spec, _, _, _= plt.specgram(x, Fs=fs, NFFT=2048, noverlap=1900)
-    spec = spec[:500,:]
     plt.close('all')
     gc.collect()
+    
+    spec = spec[:342, :]
+    spec0 = spec[np.arange(171)*2, :].reshape(1, 171, -1)
+    spec1 = spec[np.arange(171)*2 + 1, :].reshape(1, 171, -1)
+    spec = np.mean(np.concatenate((spec0, spec1), axis = 0), axis = 0)
 
-    return spec
+    return spec[:128, :128]
 
 
 def s_matrix(segment, point_sec_sliced_path, multiplication):
