@@ -4,6 +4,7 @@ from pydub.utils import make_chunks
 import os
 import gc
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 import scipy
 import scipy.io.wavfile
 import numpy as np
@@ -15,17 +16,17 @@ import data_process
 ## 10 sec slicing:
 
 # full audio will be stored here
-full_audio_path = '/home/tk/Documents/full_audio/' 
+full_audio_path = '/home/guotingyou/cocktail_phase2/full_audio' 
 
 # 10 sec sliced will be stored here
-sec10_sliced_path = '/home/tk/Documents/slice_10sec/' 
+sec10_sliced_path = '/home/guotingyou/cocktail_phase2/slice_10sec/' 
 
 # 0.1 sec slices will be stored here
-point_sec_sliced_path = '/home/tk/Documents/slice_pointsec/' 
+point_sec_sliced_path = '/home/guotingyou/cocktail_phase2/slice_pointsec/' 
 
 # block will be stored here
-mix_path = '/home/tk/Documents/mix/'  
-label_path = '/home/tk/Documents/mix_labels/'
+mix_path = '/home/guotingyou/cocktail_phase2/mix/'  
+label_path = '/home/guotingyou/cocktail_phase2/mix_labels/'
 
 # controls datapoint in single column
 multiplication = 1
@@ -33,6 +34,8 @@ multiplication = 1
 # blocks 
 blocks_volume = 25
 
+#minimum audio length
+length = 0.5
 #======================================================================
 
 
@@ -61,12 +64,12 @@ for p in range(blocks_volume):
     for file in file_name:
         for i in range(pieces * multiplication , (pieces + 1) * multiplication):
             name = file + "_{0}.wav".format(i)
-            data_process.slice_it(name, sec10_sliced_path, point_sec_sliced_path, length = 100)
+            data_process.slice_it(name, sec10_sliced_path, point_sec_sliced_path, length *1000)
 
     ## checkpoint: spec_name should have 1,000 files
     spec_name = os.listdir(point_sec_sliced_path)
-    if len(spec_name) == 1000 * multiplication: 
-        print (1000 * multiplication)
+    if len(spec_name) == (10/length)* 10 * multiplication: 
+        print ((10/length)* 10 * multiplication)
         print ("checked")
     spec_name.sort()
     
@@ -78,12 +81,12 @@ for p in range(blocks_volume):
     big_pcs = []
     all_index = []
 
-    for i in range(100 * multiplication):
+    for i in range(int(10/length) * multiplication):
         small_pcs = []
         index_record = []
         mix_pcs = []
 
-        for j in range(0 + i, 1000 * multiplication + i, 100 * multiplication):
+        for j in range(0 + i, int(10/length) * 10 * multiplication + i, int(10/length) * multiplication):
             spec = data_process.gen_spectrogram(point_sec_sliced_path + spec_name[i])
             small_pcs.append(spec)
 

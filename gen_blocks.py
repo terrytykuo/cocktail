@@ -4,6 +4,7 @@ from pydub.utils import make_chunks
 import os
 import gc
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 import scipy
 import scipy.io.wavfile
 import numpy as np
@@ -35,6 +36,8 @@ multiplication = 1
 # blocks 
 blocks_volume = 5
 
+#minimum audio length
+length = 0.5
 #======================================================================
 
 
@@ -63,24 +66,24 @@ for p in range(blocks_volume):
     for file in file_name:
         for i in range(pieces * multiplication , (pieces + 1) * multiplication):
             name = file + "_{0}.wav".format(i)
-            data_process.slice_it(name, sec10_sliced_path, point_sec_sliced_path, length = 100)
+            data_process.slice_it(name, sec10_sliced_path, point_sec_sliced_path, length = length *1000)
 
     ## checkpoint: spec_name should have 1,000 files
     spec_name = os.listdir(point_sec_sliced_path)
-    if len(spec_name) == 1000 * multiplication: 
-        print (1000 * multiplication)
+    if len(spec_name) == (10/length)* 10 * multiplication: 
+        print ((10/length)* 10 * multiplication)
         print ("checked")
     spec_name.sort()
     
         
     small_pcs = []
     pc = []
-    for i in range(1000 * multiplication):
+    for i in range(int(10/length) * 10 * multiplication):
         spec = data_process.gen_spectrogram(point_sec_sliced_path + spec_name[i])
         small_pcs.append(spec) # record spectrograms
         
         # one-hot encoding
-        index = int(i/(100 * multiplication))
+        index = int(i/((10/length) * multiplication))
         z = np.zeros((10))
         z[index] = 1
         pc.append(z) # record indexs
