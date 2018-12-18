@@ -25,10 +25,10 @@ sec10_sliced_path = '/home/guotingyou/cocktail_phase2/slice_10sec/'
 point_sec_sliced_path = '/home/guotingyou/cocktail_phase2/slice_pointsec/' 
 
 # clean audios will be stored here
-block_path = '/home/guotingyou/cocktail_phase2/cocktail/clean/'  
+block_path = '/home/guotingyou/cocktail_phase2/clean/'  
 
 # clean labels will be stored here
-labels_path = '/home/guotingyou/cocktail_phase2/cocktail/clean_labels/' 
+labels_path = '/home/guotingyou/cocktail_phase2/clean_labels/' 
 
 # controls datapoint in single column
 multiplication = 1
