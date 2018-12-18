@@ -11,24 +11,33 @@ import numpy as np
 import json
 import data_process
 
+
+
+server = True
+
+root_dir = '/home/tk/Documents/'
+if server == True:
+    root_dir = '/home/guotingyou/cocktail_phase2/'
+
+
 # parameters:
 
 ## 10 sec slicing:
 
 # full audio will be stored here
-full_audio_path = '/home/guotingyou/cocktail_phase2/full_audio/' 
+full_audio_path = root_dir + 'full_audio/' 
 
 # 10 sec sliced will be stored here
-sec10_sliced_path = '/home/guotingyou/cocktail_phase2/slice_10sec/' 
+sec10_sliced_path = root_dir + 'slice_10sec/' 
 
 # 0.1 sec slices will be stored here
-point_sec_sliced_path = '/home/guotingyou/cocktail_phase2/slice_pointsec/' 
+point_sec_sliced_path = root_dir + 'slice_pointsec/' 
 
 # clean audios will be stored here
-block_path = '/home/guotingyou/cocktail_phase2/clean/'  
+block_path = root_dir + 'clean/'  
 
 # clean labels will be stored here
-labels_path = '/home/guotingyou/cocktail_phase2/clean_labels/' 
+labels_path = root_dir + 'clean_labels/' 
 
 # controls datapoint in single column
 multiplication = 1
@@ -99,10 +108,10 @@ for p in range(blocks_volume):
     
     ## x_train = big_matrix --> json
     ## y_train = index_record --> json
-    with open(block_path + "clean" + str(p) + '.json', 'w') as jh:
+    with open(block_path + str(p) + '.json', 'w') as jh:
         json.dump(big_matrix.tolist(), jh)
     
-    with open(labels_path + "clean_label" + str(p) + '.json', 'w') as f:
+    with open(labels_path + str(p) + '.json', 'w') as f:
         json.dump(index_matrix.tolist(), f)
         
     print (".json done")

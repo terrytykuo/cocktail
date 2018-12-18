@@ -29,10 +29,17 @@ bs = 4
 #        path
 #=============================================
 
-clean_dir = '/home/guotingyou/cocktail_phase2/clean/' 
-mix_dir = '/home/guotingyou/cocktail_phase2/mix/' 
-clean_label_dir = '/home/guotingyou/cocktail_phase2/clean_labels/' 
-mix_label_dir = '/home/guotingyou/cocktail_phase2/mix_labels' 
+server = True
+
+root_dir = '/home/tk/Documents/'
+if server == True:
+    root_dir = '/home/guotingyou/cocktail_phase2/'
+
+
+clean_dir = root_dir + 'clean/' 
+mix_dir = root_dir + 'mix/' 
+clean_label_dir = root_dir + 'clean_labels/' 
+mix_label_dir = root_dir + 'mix_labels/' 
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
@@ -497,8 +504,8 @@ for epo in range(epoch):
 
 torch.save(model, '/home/tk/Documents/DAE0.pkl')
 
-with open ('/home/tk/Documents/DAE_loss_record.json', 'w') as f:
+with open (root_dir + 'DAE_loss_record.json', 'w') as f:
     json.dump(loss_record, f)
     
-with open ('/home/tk/Documents/DAE_loss_epoch.json', 'w') as f:
+with open (root_dir + 'DAE_loss_epoch.json', 'w') as f:
     json.dump(epoch_loss, f)
