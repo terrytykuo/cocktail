@@ -29,10 +29,10 @@ bs = 4
 #        path
 #=============================================
 
-clean_dir = '/home/tk/Documents/clean/' 
-mix_dir = '/Users/Terry/Documents/Research/test_block/' 
-clean_label_dir = '/Users/Terry/Documents/Research/test_block/' 
-mix_label_dir = '/Users/Terry/Documents/Research/test_block/' 
+clean_dir = '/home/guotingyou/cocktail_phase2/clean/' 
+mix_dir = '/home/guotingyou/cocktail_phase2/mix/' 
+clean_label_dir = '/home/guotingyou/cocktail_phase2/clean_labels/' 
+mix_label_dir = '/home/guotingyou/cocktail_phase2/mix_labels' 
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()

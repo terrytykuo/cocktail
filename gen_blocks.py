@@ -16,25 +16,25 @@ import data_process
 ## 10 sec slicing:
 
 # full audio will be stored here
-full_audio_path = '/home/tk/Documents/full_audio/' 
+full_audio_path = '/home/guotingyou/cocktail_phase2/full_audio/' 
 
 # 10 sec sliced will be stored here
-sec10_sliced_path = '/home/tk/Documents/slice_10sec/' 
+sec10_sliced_path = '/home/guotingyou/cocktail_phase2/slice_10sec/' 
 
 # 0.1 sec slices will be stored here
-point_sec_sliced_path = '/home/tk/Documents/slice_pointsec/' 
+point_sec_sliced_path = '/home/guotingyou/cocktail_phase2/slice_pointsec/' 
 
 # clean audios will be stored here
-block_path = '/home/tk/Documents/clean/'  
+block_path = '/home/guotingyou/cocktail_phase2/cocktail/clean/'  
 
 # clean labels will be stored here
-labels_path = '/home/tk/Documents/clean_labels/' 
+labels_path = '/home/guotingyou/cocktail_phase2/cocktail/clean_labels/' 
 
 # controls datapoint in single column
 multiplication = 1
 
 # blocks 
-blocks_volume = 10
+blocks_volume = 50
 
 #minimum audio length
 length = 0.5
