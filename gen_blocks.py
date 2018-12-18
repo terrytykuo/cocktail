@@ -34,7 +34,7 @@ labels_path = '/home/tk/Documents/clean_labels/'
 multiplication = 1
 
 # blocks 
-blocks_volume = 5
+blocks_volume = 10
 
 #minimum audio length
 length = 0.5
