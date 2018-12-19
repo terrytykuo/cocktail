@@ -13,7 +13,7 @@ import data_process
 
 
 
-server = False
+server = True
 
 root_dir = '/home/tk/Documents/'
 if server == True:
