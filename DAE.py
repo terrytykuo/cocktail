@@ -22,7 +22,7 @@ import cv2
 #        Hyperparameters
 #=============================================
 
-epoch = 100
+epoch = 1000
 lr = 0.0001
 mom = 0.9
 bs = 4
@@ -489,7 +489,6 @@ for epo in range(epoch):
     for i, data in enumerate(trainloader, 0):
         inputs = data
         inputs = Variable(inputs)
-        print (inputs)
         optimizer.zero_grad()
 
         top = model.upward(inputs + white(inputs))
@@ -500,17 +499,15 @@ for epo in range(epoch):
         loss.backward()
         optimizer.step()
         
-        if i % 50 == 0:
-            print ("input shape = ", inputs.shape)
-            print ("output shape = ", outputs.shape)
+        if i % 100 == 0:
             inn = inputs[0].view(128, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/" + str(i) + ".png", inn)
+            cv2.imwrite("/home/tk/Documents/recover/" + str(epo) + "_" + str(i) + ".png", inn)
             
             out = outputs[0].view(128, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/" + str(i) + "_re.png", out)
+            cv2.imwrite("/home/tk/Documents/recover/" + str(epo) + "_" + str(i) + "_re.png", out)
+            loss_record.append(loss.item())
 
         every_loss.append(loss.item())
-        loss_record.append(loss.item())
 
 
         if i % 50 == 0:
@@ -527,7 +524,7 @@ for epo in range(epoch):
 #        Save Model & Loss
 #=============================================
 
-torch.save(model, root_dir + 'DAE0.pkl')
+torch.save(model, root_dir + 'DAE.pkl')
 
 with open (root_dir + 'DAE_loss_record.json', 'w') as f:
     json.dump(loss_record, f)
