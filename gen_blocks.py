@@ -13,7 +13,7 @@ import data_process
 
 
 
-server = True
+server = False
 
 root_dir = '/home/tk/Documents/'
 if server == True:
@@ -43,7 +43,7 @@ labels_path = root_dir + 'clean_labels/'
 multiplication = 1
 
 # blocks 
-blocks_volume = 25
+blocks_volume = 20
 
 #minimum audio length
 length = 0.5

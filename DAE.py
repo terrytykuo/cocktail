@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import torch.utils.data as data
+import torch.nn.init as init
 
 import torchvision
 import torchvision.transforms as transforms
@@ -14,22 +15,52 @@ import pickle
 import os
 import json
 import numpy as np
-
+import gc
+import cv2
 
 #=============================================
 #        Hyperparameters
 #=============================================
 
-epoch = 5200
+epoch = 100
 lr = 0.0001
-mom = 0.005
+mom = 0.9
 bs = 4
+
+#=============================================
+#        Define Functions
+#=============================================
+
+def odd(w):
+    return list(np.arange(1, w, step=2, dtype='long'))
+
+def even(w):
+    return list(np.arange(0, w, step=2, dtype='long'))
+
+def white(x):
+    fw, tw = x.shape[1], x.shape[2]
+
+    first = F.relu(torch.normal(mean=torch.zeros(fw, tw), std=torch.ones(fw, tw)) ) * 0.05
+    second_seed = F.relu(torch.normal(mean=torch.zeros(fw//2, tw//2), std=torch.ones(fw//2, tw//2))) * 0.03
+    second = torch.zeros(fw, tw)
+
+    row_x  = torch.zeros(int(fw//2), tw)
+    # row_x = torch.zeros(int(fw/2), tw)
+
+    row_x[:, odd(tw)]  = second_seed
+    row_x[:, even(tw)] = second_seed
+
+    second[odd(fw), :]  = row_x
+    second[even(fw), :] = row_x
+
+    return second + first
+
 
 #=============================================
 #        path
 #=============================================
 
-server = True
+server = False
 
 root_dir = '/home/tk/Documents/'
 if server == True:
@@ -47,17 +78,9 @@ cleanfolder.sort()
 # mixfolder = os.listdir(mix_dir)
 # mixfolder.sort()
 
-# cleanlabelfolder = os.listdir(clean_label_dir)
-# cleanlabelfolder.sort()
-
-# mixlabelfolder = os.listdir(mix_label_dir)
-# mixlabelfolder.sort()
-
 
 clean_list = []
 # mix_list = []
-# clean_label_list = []
-# mix_label_list = []
 
 #=============================================
 #       Define Datasets
@@ -66,37 +89,17 @@ class MSourceDataSet(Dataset):
     
     def __init__(self, clean_dir, mix_dir, clean_label_dir, mix_label_dir):
         
-#        with open(clean_dir + 'clean0.json') as f:
-#            clean0 = torch.Tensor(json.load(f))
-        
-#         self.spec = clean0
-#         self.label = cleanlabel0
-            
-        
+
+                    
         for i in cleanfolder:
             with open(clean_dir + '{}'.format(i)) as f:
                 clean_list.append(torch.Tensor(json.load(f)))
         
-#        for i in mixfolder:
-#             with open(mix_dir + '{}'.format(i)) as f:
-#                    mix_list.append(torch.Tensor(json.load(f)))
-                
-#         for i in cleanlabelfolder:
-#             with open(clean_label_dir + '{}'.format(i)) as f:
-#                 clean_label_list.append(torch.Tensor(json.load(f)))
-
-#         for i in mixlabelfolder:
-#             with open(mix_label_dir + '{}'.format(i)) as f:
-#                 mix_label_list.append(torch.Tensor(json.load(f)))
         
         cleanblock = torch.cat(clean_list, 0)
 #         mixblock = torch.cat(mix_list, 0)
         self.spec = cleanblock
                 
-#         cleanlabel = torch.cat(clean_label_list, 0)
-#         mixlabel = torch.cat(mix_label_list, 0)
-#         self.label = torch.cat([cleanlabel, mixlabel], 0)
-
         
     def __len__(self):
         return self.spec.shape[0]
@@ -138,17 +141,17 @@ class ResBlock(nn.Module):
             x1 = F.relu(self.conv1(x))
             x1 =        self.conv2(x1)
             x  = self.sizematch(self.channels_in, self.channels_out, x)
-            return x + x1
+            return F.relu(x + x1)
         elif self.channels_out < self.channels_in:
             x = F.relu(self.conv1(x))
             x1 =       self.conv2(x)
             x = x + x1
-            return x
+            return F.relu(x)
         else:
             x1 = F.relu(self.conv1(x))
             x1 =        self.conv2(x1)
             x = x + x1
-            return x
+            return F.relu(x)
 
     def sizematch(self, channels_in, channels_out, x):
         zeros = torch.zeros( (x.size()[0], channels_out - channels_in, x.shape[2], x.shape[3]), dtype = torch.float32)
@@ -169,7 +172,7 @@ class ResTranspose(nn.Module):
         x1 = F.relu(self.deconv1(x))
         x1 =        self.deconv2(x1)
         x = self.sizematch(x)
-        return x + x1
+        return F.relu(x + x1)
 
     def sizematch(self, x):
         # expand
@@ -277,7 +280,8 @@ class ResDAE(nn.Module):
             ResBlock(512, 512),
             ResBlock(512, 256),
             ResBlock(256, 256),
-            nn.ConvTranspose2d(256, 256, kernel_size = (2,2), stride = 2),
+            ResTranspose(256, 256),
+#            nn.ConvTranspose2d(256, 256, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(256),
         )
 
@@ -288,7 +292,8 @@ class ResDAE(nn.Module):
             ResBlock(256, 256),
             ResBlock(256, 128),
             ResBlock(128, 128),
-            nn.ConvTranspose2d(128, 128, kernel_size = (2,2), stride = 2),
+            ResTranspose(128, 128),
+#            nn.ConvTranspose2d(128, 128, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(128),
         )
 
@@ -300,7 +305,8 @@ class ResDAE(nn.Module):
             ResBlock(128, 128),
             ResBlock(128, 64),
             ResBlock(64, 64),
-            nn.ConvTranspose2d(64, 64, kernel_size = (2,2), stride = 2),
+            ResTranspose(64, 64),
+#            nn.ConvTranspose2d(64, 64, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(64),
         )
 
@@ -312,7 +318,8 @@ class ResDAE(nn.Module):
             ResBlock(64, 64),
             ResBlock(64, 32),
             ResBlock(32, 32),
-            nn.ConvTranspose2d(32, 32, kernel_size = (2,2), stride = 2),
+            ResTranspose(32, 32),
+#            nn.ConvTranspose2d(32, 32, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(32),
         )
 
@@ -324,7 +331,8 @@ class ResDAE(nn.Module):
             ResBlock(32, 32),
             ResBlock(32, 16),
             ResBlock(16, 16),
-            nn.ConvTranspose2d(16, 16, kernel_size = (2,2), stride = 2),
+            ResTranspose(16, 16),
+#            nn.ConvTranspose2d(16, 16, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(16),
         )
 
@@ -336,7 +344,8 @@ class ResDAE(nn.Module):
             ResBlock(16, 16),
             ResBlock(16, 8),
             ResBlock(8, 8),
-            nn.ConvTranspose2d(8, 8, kernel_size = (2,2), stride = 2),
+            ResTranspose(8, 8),
+#            nn.ConvTranspose2d(8, 8, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(8),
         )
 
@@ -346,11 +355,12 @@ class ResDAE(nn.Module):
             ResBlock(8, 4),
             ResBlock(4, 1),
             ResBlock(1, 1),
-#            nn.ConvTranspose2d(1, 1, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(1),
         )
 
         # 128x128x1
+        
+        self.apply(initialize)
 
 
     def upward(self, x, a7=None, a6=None, a5=None, a4=None, a3=None, a2=None):
@@ -458,7 +468,7 @@ print (model)
 #        Optimizer
 #=============================================
 
-criterion = nn.MSELoss(size_average = True)
+criterion = nn.MSELoss(size_average = True, reduce = True)
 optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
 
 #=============================================
@@ -479,21 +489,36 @@ for epo in range(epoch):
     for i, data in enumerate(trainloader, 0):
         inputs = data
         inputs = Variable(inputs)
+        print (inputs)
         optimizer.zero_grad()
 
-        top = model.upward(inputs)
-        outputs = model.downward(top, shortcut = False)
+        top = model.upward(inputs + white(inputs))
+        outputs = model.downward(top, shortcut = True)
+        
         
         loss = criterion(inputs, outputs)
         loss.backward()
         optimizer.step()
-
-        every_loss.append(loss.item())
         
         if i % 50 == 0:
-            loss_record.append(loss.item())
+            print ("input shape = ", inputs.shape)
+            print ("output shape = ", outputs.shape)
+            inn = inputs[0].view(128, 128).detach().numpy() * 255
+            cv2.imwrite("/home/tk/Documents/recover/" + str(i) + ".png", inn)
+            
+            out = outputs[0].view(128, 128).detach().numpy() * 255
+            cv2.imwrite("/home/tk/Documents/recover/" + str(i) + "_re.png", out)
+
+        every_loss.append(loss.item())
+        loss_record.append(loss.item())
+
+
+        if i % 50 == 0:
             print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
-        
+            
+    gc.collect()
+    plt.close("all")
+
     epoch_loss.append(np.mean(every_loss))
     every_loss = []
 
@@ -509,3 +534,22 @@ with open (root_dir + 'DAE_loss_record.json', 'w') as f:
     
 with open (root_dir + 'DAE_loss_epoch.json', 'w') as f:
     json.dump(epoch_loss, f)
+    
+
+#=============================================
+#        plotting
+#=============================================
+
+plt.figure(figsize = (20, 10))
+plt.plot(loss_record)
+plt.xlabel('iterations')
+plt.ylabel('loss')
+plt.savefig('DAE_loss.png')
+plt.show()
+
+plt.figure(figsize = (20, 10))
+plt.plot(epoch_loss)
+plt.xlabel('iterations')
+plt.ylabel('epoch_loss')
+plt.savefig('DAE_epoch_loss')
+plt.show()

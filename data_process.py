@@ -93,11 +93,16 @@ def gen_spectrogram(wav):
     gc.collect()
     
     spec = spec[:342, :]
-    spec0 = spec[np.arange(171)*2, :].reshape(1, 171, -1)
-    spec1 = spec[np.arange(171)*2 + 1, :].reshape(1, 171, -1)
-    spec = np.mean(np.concatenate((spec0, spec1), axis = 0), axis = 0)
+    spec_0 = spec[np.arange(171)*2, :].reshape(1, 171, -1)
+    spec_1 = spec[np.arange(171)*2 + 1, :].reshape(1, 171, -1)
+    spec_ = np.mean(np.concatenate((spec_0, spec_1), axis = 0), axis = 0)
 
-    return spec[:128, :128]
+    spec_ = spec_[:128, :128]
+    mean = np.mean(spec_)
+    spec_ = spec_/ mean
+    spec_[spec_ >= 1] = 1
+    
+    return spec_
 
 
 def s_matrix(segment, point_sec_sliced_path, multiplication):
