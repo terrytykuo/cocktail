@@ -488,7 +488,7 @@ for epo in range(epoch):
         loss.backward()
         optimizer.step()
 
-        loss_record.append(loss.item())
+#        loss_record.append(loss.item())
         every_loss.append(loss.item())
         
         if i % 10 == 0:
@@ -502,7 +502,7 @@ for epo in range(epoch):
 #        Save Model & Loss
 #=============================================
 
-torch.save(model, '/home/tk/Documents/DAE0.pkl')
+torch.save(model, root_dir + 'DAE0.pkl')
 
 with open (root_dir + 'DAE_loss_record.json', 'w') as f:
     json.dump(loss_record, f)
