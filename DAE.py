@@ -488,10 +488,10 @@ for epo in range(epoch):
         loss.backward()
         optimizer.step()
 
-#        loss_record.append(loss.item())
         every_loss.append(loss.item())
         
-        if i % 10 == 0:
+        if i % 50 == 0:
+            loss_record.append(loss.item())
             print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
         
     epoch_loss.append(np.mean(every_loss))
