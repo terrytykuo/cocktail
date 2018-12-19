@@ -29,7 +29,7 @@ bs = 4
 #        path
 #=============================================
 
-server = False
+server = True
 
 root_dir = '/home/tk/Documents/'
 if server == True:
