@@ -22,10 +22,10 @@ import cv2
 #        Hyperparameters
 #=============================================
 
-epoch = 1000
-lr = 0.0001
+epoch = 10
+lr = 0.0000001
 mom = 0.9
-bs = 4
+bs = 10
 
 #=============================================
 #        Define Functions
@@ -68,9 +68,9 @@ if server == True:
 
 
 clean_dir = root_dir + 'clean/' 
-mix_dir = root_dir + 'mix/' 
-clean_label_dir = root_dir + 'clean_labels/' 
-mix_label_dir = root_dir + 'mix_labels/' 
+# mix_dir = root_dir + 'mix/' 
+# clean_label_dir = root_dir + 'clean_labels/' 
+# mix_label_dir = root_dir + 'mix_labels/' 
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
@@ -87,8 +87,12 @@ clean_list = []
 #=============================================
 class MSourceDataSet(Dataset):
     
-    def __init__(self, clean_dir, mix_dir, clean_label_dir, mix_label_dir):
+    def __init__(self, clean_dir):
         
+
+        # Overfitting single block
+#        with open(clean_dir + 'clean3.json') as f:
+#            clean_list.append(torch.Tensor(json.load(f)))
 
                     
         for i in cleanfolder:
@@ -114,13 +118,13 @@ class MSourceDataSet(Dataset):
 #        Define Dataloader
 #=============================================
 
-trainset = MSourceDataSet(clean_dir, mix_dir, clean_label_dir, mix_label_dir)
+trainset = MSourceDataSet(clean_dir)
 
 trainloader = torch.utils.data.DataLoader(dataset = trainset,
-                                                batch_size = 4,
+                                                batch_size = bs,
                                                 shuffle = True)
 
-
+del clean_list
 #=============================================
 #        Model
 #=============================================
@@ -138,20 +142,20 @@ class ResBlock(nn.Module):
 
     def forward(self, x):
         if self.channels_out > self.channels_in:
-            x1 = F.relu(self.conv1(x))
+            x1 = F.relu(self.conv1(x), inplace = True)
             x1 =        self.conv2(x1)
             x  = self.sizematch(self.channels_in, self.channels_out, x)
-            return F.relu(x + x1)
+            return F.relu(x + x1, inplace = True)
         elif self.channels_out < self.channels_in:
             x = F.relu(self.conv1(x))
             x1 =       self.conv2(x)
             x = x + x1
-            return F.relu(x)
+            return F.relu(x, inplace = True)
         else:
-            x1 = F.relu(self.conv1(x))
+            x1 = F.relu(self.conv1(x), inplace = True)
             x1 =        self.conv2(x1)
             x = x + x1
-            return F.relu(x)
+            return F.relu(x, inplace = True)
 
     def sizematch(self, channels_in, channels_out, x):
         zeros = torch.zeros( (x.size()[0], channels_out - channels_in, x.shape[2], x.shape[3]), dtype = torch.float32)
@@ -169,10 +173,10 @@ class ResTranspose(nn.Module):
 
     def forward(self, x):
         # cin = cout
-        x1 = F.relu(self.deconv1(x))
+        x1 = F.relu(self.deconv1(x), inplace = True)
         x1 =        self.deconv2(x1)
         x = self.sizematch(x)
-        return F.relu(x + x1)
+        return F.relu(x + x1, inplace = True)
 
     def sizematch(self, x):
         # expand
@@ -203,8 +207,8 @@ class ResDAE(nn.Module):
         # 128x128x1
 
         self.upward_net1 = nn.Sequential(
+            ResBlock(1, 1),
             ResBlock(1, 8),
-            ResBlock(8, 8),
             ResBlock(8, 8),
             nn.BatchNorm2d(8),
         )
@@ -352,8 +356,8 @@ class ResDAE(nn.Module):
         # 64x64x8
         self.downward_net1 = nn.Sequential(
             ResBlock(8, 8),
-            ResBlock(8, 4),
-            ResBlock(4, 1),
+            ResBlock(8, 1),
+            ResBlock(1, 1),
             ResBlock(1, 1),
             nn.BatchNorm2d(1),
         )
@@ -461,14 +465,15 @@ class ResDAE(nn.Module):
 
         return y
 
-model = ResDAE()
-print (model)
+# model = ResDAE()
+model = torch.load(root_dir + "DAE.pkl")
+# print (model)
 
 #=============================================
 #        Optimizer
 #=============================================
 
-criterion = nn.MSELoss(size_average = True, reduce = True)
+criterion = nn.L1Loss()
 optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
 
 #=============================================
@@ -476,8 +481,8 @@ optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
 #=============================================
 
 loss_record = []
-every_loss = []
-epoch_loss = []
+# every_loss = []
+# epoch_loss = []
 
 
 #=============================================
@@ -491,33 +496,45 @@ for epo in range(epoch):
         inputs = Variable(inputs)
         optimizer.zero_grad()
 
-        top = model.upward(inputs + white(inputs))
+        top = model.upward(inputs+ white(inputs))
         outputs = model.downward(top, shortcut = True)
-        
         
         loss = criterion(inputs, outputs)
         loss.backward()
         optimizer.step()
         
-        if i % 100 == 0:
+        if i % 50 == 0:
             inn = inputs[0].view(128, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/" + str(epo) + "_" + str(i) + ".png", inn)
+            cv2.imwrite("/home/tk/Documents/recover/overfitting_block2/" + str(epo) + "_" + str(i) + ".png", inn)
             
             out = outputs[0].view(128, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/" + str(epo) + "_" + str(i) + "_re.png", out)
-            loss_record.append(loss.item())
+            cv2.imwrite("/home/tk/Documents/recover/overfitting_block2/" + str(epo) + "_" + str(i) + "_re.png", out)
+#            loss_record.append(loss.item())
 
-        every_loss.append(loss.item())
+#        every_loss.append(loss.item())
+        del inputs, data
 
-
-        if i % 50 == 0:
+        if i % 10 == 0:
             print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
-            
+   
     gc.collect()
     plt.close("all")
 
-    epoch_loss.append(np.mean(every_loss))
-    every_loss = []
+#    epoch_loss.append(np.mean(every_loss))
+#    every_loss = []
+    
+#    if epo % 10 == 0:
+#        plt.figure(figsize = (20, 10))
+#        plt.plot(loss_record)
+#        plt.xlabel('iterations')
+#        plt.ylabel('loss')
+#        plt.savefig(root_dir + 'DAE_batchloss.png')
+
+#        plt.figure(figsize = (20, 10))
+#        plt.plot(epoch_loss)
+#        plt.xlabel('epocs')
+#        plt.ylabel('epoch_loss')
+#        plt.savefig(root_dir + 'DAE_epoch_loss')
 
     
 #=============================================
@@ -526,27 +543,25 @@ for epo in range(epoch):
 
 torch.save(model, root_dir + 'DAE.pkl')
 
-with open (root_dir + 'DAE_loss_record.json', 'w') as f:
-    json.dump(loss_record, f)
+# with open (root_dir + 'DAE_loss_record.json', 'w') as f:
+#    json.dump(loss_record, f)
     
-with open (root_dir + 'DAE_loss_epoch.json', 'w') as f:
-    json.dump(epoch_loss, f)
+# with open (root_dir + 'DAE_loss_epoch.json', 'w') as f:
+#     json.dump(epoch_loss, f)
     
 
 #=============================================
 #        plotting
 #=============================================
 
-plt.figure(figsize = (20, 10))
-plt.plot(loss_record)
-plt.xlabel('iterations')
-plt.ylabel('loss')
-plt.savefig('DAE_loss.png')
-plt.show()
+# plt.figure(figsize = (20, 10))
+# plt.plot(loss_record)
+# plt.xlabel('iterations')
+# plt.ylabel('loss')
+# plt.savefig('DAE_loss.png')
 
-plt.figure(figsize = (20, 10))
-plt.plot(epoch_loss)
-plt.xlabel('iterations')
-plt.ylabel('epoch_loss')
-plt.savefig('DAE_epoch_loss')
-plt.show()
+# plt.figure(figsize = (20, 10))
+# plt.plot(epoch_loss)
+# plt.xlabel('iterations')
+# plt.ylabel('epoch_loss')
+# plt.savefig('DAE_epoch_loss')
