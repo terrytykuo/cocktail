@@ -499,7 +499,7 @@ for epo in range(epoch):
         top = model.upward(inputs+ white(inputs))
         outputs = model.downward(top, shortcut = True)
         
-        loss = criterion(inputs, outputs)
+        loss = criterion(outputs, inputs)
         loss.backward()
         optimizer.step()
         
