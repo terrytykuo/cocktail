@@ -23,7 +23,7 @@ import cv2
 #=============================================
 
 epoch = 30
-lr = 0.0005
+lr = 0.00001
 mom = 0.9
 bs = 10
 
@@ -122,7 +122,7 @@ trainset = MSourceDataSet(clean_dir)
 
 trainloader = torch.utils.data.DataLoader(dataset = trainset,
                                                 batch_size = bs,
-                                                shuffle = False)
+                                                shuffle = True)
 
 del clean_list
 #=============================================
@@ -279,8 +279,8 @@ class ResDAE(nn.Module):
             nn.BatchNorm2d(512),
         )
         
-        self.fc1 = nn.Linear(2048, 512)
-        self.fc2 = nn.Linear(512, 2048)
+        self.fc1 = nn.Linear(4096, 512)
+        self.fc2 = nn.Linear(512, 4096)
 
         # 1x1x512
         self.downward_net7 = nn.Sequential(
@@ -411,9 +411,9 @@ class ResDAE(nn.Module):
 
         # 256x2x2
 
-        x = self.upward_net7(x)
-        if a7 is not None: x = x * a7
-#        print ("after conv7", x.shape)
+#        x = self.upward_net7(x)
+#        if a7 is not None: x = x * a7
+##        print ("after conv7", x.shape)
 
         x = x.view(bs, 1, -1)
         x = self.fc1(x)
@@ -425,46 +425,46 @@ class ResDAE(nn.Module):
 #        print ("begin to downward, y.shape = ", y.shape)
         
         y = self.fc2(y)
-        y = y.view(bs, 512, 2, 2)
+        y = y.view(bs, 256, 4, 4)
         
-        # 512x1x1
-        y = self.downward_net7(y)
-#        print ("after down7", y.shape)
+        # 512x2x2
+#        y = self.downward_net7(y)
+##        print ("after down7", y.shape)
 
 
-        # 256x2x2
+        # 256x4x4
         y = self.downward_net6(y)
 #        print ("after down6", y.shape)
 
-        # 128x4x4
+        # 128x8x8
         if shortcut:
             y = torch.cat((y, self.x5), 1)
             y = F.relu(self.uconv5(y))
         y = self.downward_net5(y)
 #        print ("after down5", y.shape)
 
-        # 64x8x8
+        # 64x16x16
         if shortcut:
             y = torch.cat((y, self.x4), 1)
             y = F.relu(self.uconv4(y))
         y = self.downward_net4(y)
 #        print ("after down4", y.shape)
 
-        # 32x16x16
+        # 32x32x32
         if shortcut:
             y = torch.cat((y, self.x3), 1)
             y = F.relu(self.uconv3(y))
         y = self.downward_net3(y)
 #        print ("after down3", y.shape)
 
-        # 16x32x32
+        # 16x64x64
         if shortcut:
             y = torch.cat((y, self.x2), 1)
             y = F.relu(self.uconv2(y))
         y = self.downward_net2(y)
 #        print ("after down2", y.shape)
 
-        # 8x64x64
+        # 8x128x128
         y = self.downward_net1(y)
 #        print ("after down1", y.shape)
  
@@ -473,15 +473,16 @@ class ResDAE(nn.Module):
         return y
 
 
-model = ResDAE()
-#model = torch.load(root_dir + "DAE-FC1.pkl")
+# model = ResDAE()
+model = torch.load(root_dir + 'recover/MSEloss/DAE_L1loss_FC.pkl')
 # print (model)
 
 #=============================================
 #        Optimizer
 #=============================================
 
-criterion = nn.L1Loss()
+#import pytorch_ssim
+criterion = nn.MSELoss()
 optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
 
 #=============================================
@@ -505,23 +506,24 @@ for epo in range(epoch):
 
         top = model.upward(inputs+ white(inputs))
         outputs = model.downward(top, shortcut = True)
-        with open ( root_dir + 'recover/L1loss_FC/recover_pic_epo_' + str(epo), 'w') as f:
-            json.dump(outputs.tolist(), f)
+        #with open ( root_dir + 'recover/L1loss_FC/recover_pic_epo_' + str(epo), 'w') as f:
+        #    json.dump(outputs.tolist(), f)
         
         loss = criterion(outputs, inputs)
         loss.backward()
         optimizer.step()
         
-        if i % 50 == 0:
+        if i % 20 == 0:
             inn = inputs[0].view(128, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/L1loss_FC/" + str(epo) + "_" + str(i) + ".png", inn)
+            cv2.imwrite("/home/tk/Documents/recover/MSEloss/" + str(epo) + "_" + str(i) + ".png", inn)
             
             out = outputs[0].view(128, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/L1loss_FC/" + str(epo) + "_" + str(i) + "_re.png", out)
+            cv2.imwrite("/home/tk/Documents/recover/MSEloss/" + str(epo) + "_" + str(i) + "_re.png", out)
+            
             loss_record.append(loss.item())
-
+            
 #        every_loss.append(loss.item())
-        del inputs, data
+#        del inputs, data
 
         if i % 20 == 0:
             print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
@@ -537,7 +539,7 @@ for epo in range(epoch):
         plt.plot(loss_record)
         plt.xlabel('iterations')
         plt.ylabel('loss')
-        plt.savefig(root_dir + 'recover/L1loss_FC/DAE_loss.png')
+        plt.savefig(root_dir + 'recover/MSEloss/DAE_loss.png')
 
 #        plt.figure(figsize = (20, 10))
 #        plt.plot(epoch_loss)
@@ -550,7 +552,7 @@ for epo in range(epoch):
 #        Save Model & Loss
 #=============================================
 
-torch.save(model, root_dir + 'recover/L1loss_FC/DAE_L1loss_FC.pkl')
+torch.save(model, root_dir + 'recover/MSEloss/DAE_L1loss_FC.pkl')
 
 with open (root_dir + 'loss_record.json', 'w') as f:
     json.dump(loss_record, f)
