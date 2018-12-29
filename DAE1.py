@@ -22,8 +22,8 @@ import cv2
 #        Hyperparameters
 #=============================================
 
-epoch = 30
-lr = 0.00001
+epoch = 10
+lr = 0.001
 mom = 0.9
 bs = 10
 
@@ -122,7 +122,7 @@ trainset = MSourceDataSet(clean_dir)
 
 trainloader = torch.utils.data.DataLoader(dataset = trainset,
                                                 batch_size = bs,
-                                                shuffle = True)
+                                                shuffle = False)
 
 del clean_list
 #=============================================
@@ -371,7 +371,7 @@ class ResDAE(nn.Module):
 
 
     def upward(self, x, a7=None, a6=None, a5=None, a4=None, a3=None, a2=None):
-        x = x.view(bs, 1, 128, 128)
+        x = x.view(bs, 1, 256, 128)
         # 1x128x128
 #        print ("initial", x.shape)
         x = self.upward_net1(x)
@@ -411,9 +411,9 @@ class ResDAE(nn.Module):
 
         # 256x2x2
 
-#        x = self.upward_net7(x)
-#        if a7 is not None: x = x * a7
-##        print ("after conv7", x.shape)
+        x = self.upward_net7(x)
+        if a7 is not None: x = x * a7
+#        print ("after conv7", x.shape)
 
         x = x.view(bs, 1, -1)
         x = self.fc1(x)
@@ -425,10 +425,11 @@ class ResDAE(nn.Module):
 #        print ("begin to downward, y.shape = ", y.shape)
         
         y = self.fc2(y)
-        y = y.view(bs, 256, 4, 4)
+#       print (y.shape)
+        y = y.view(bs, 512, 4, 2)
         
         # 512x2x2
-#        y = self.downward_net7(y)
+        y = self.downward_net7(y)
 ##        print ("after down7", y.shape)
 
 
@@ -474,7 +475,7 @@ class ResDAE(nn.Module):
 
 
 # model = ResDAE()
-model = torch.load(root_dir + 'recover/MSEloss/DAE_L1loss_FC.pkl')
+model = torch.load(root_dir + 'recover/MSEloss/MSEloss_FC.pkl')
 # print (model)
 
 #=============================================
@@ -514,10 +515,10 @@ for epo in range(epoch):
         optimizer.step()
         
         if i % 20 == 0:
-            inn = inputs[0].view(128, 128).detach().numpy() * 255
+            inn = inputs[0].view(256, 128).detach().numpy() * 255
             cv2.imwrite("/home/tk/Documents/recover/MSEloss/" + str(epo) + "_" + str(i) + ".png", inn)
             
-            out = outputs[0].view(128, 128).detach().numpy() * 255
+            out = outputs[0].view(256, 128).detach().numpy() * 255
             cv2.imwrite("/home/tk/Documents/recover/MSEloss/" + str(epo) + "_" + str(i) + "_re.png", out)
             
             loss_record.append(loss.item())
@@ -552,7 +553,7 @@ for epo in range(epoch):
 #        Save Model & Loss
 #=============================================
 
-torch.save(model, root_dir + 'recover/MSEloss/DAE_L1loss_FC.pkl')
+torch.save(model, root_dir + 'recover/MSEloss/MSEloss_FC.pkl')
 
 with open (root_dir + 'loss_record.json', 'w') as f:
     json.dump(loss_record, f)

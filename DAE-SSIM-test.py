@@ -19,14 +19,10 @@ import numpy as np
 import gc
 import cv2
 
-#=============================================
-#        Hyperparameters
-#=============================================
 
-epoch = 1
-lr = 0.001
-mom = 0.9
+epoch = 5
 bs = 10
+
 
 #=============================================
 #        Define Functions
@@ -92,15 +88,9 @@ class MSourceDataSet(Dataset):
         
 
         # Overfitting single block
-        with open(clean_dir + 'clean11.json') as f:
+        with open(clean_dir + 'clean12.json') as f:
             clean_list.append(torch.Tensor(json.load(f)))
 
-                    
-#        for i in cleanfolder:
-#            with open(clean_dir + '{}'.format(i)) as f:
-#                clean_list.append(torch.Tensor(json.load(f)))
-        
-        
         cleanblock = torch.cat(clean_list, 0)
 #         mixblock = torch.cat(mix_list, 0)
         self.spec = cleanblock
@@ -119,13 +109,13 @@ class MSourceDataSet(Dataset):
 #        Define Dataloader
 #=============================================
 
-trainset = MSourceDataSet(clean_dir)
+testset = MSourceDataSet(clean_dir)
 
-trainloader = torch.utils.data.DataLoader(dataset = trainset,
+trainloader = torch.utils.data.DataLoader(dataset = testset,
                                                 batch_size = bs,
-                                                shuffle = False)
+                                                shuffle = True)
 
-del clean_list
+
 #=============================================
 #        Model
 #=============================================
@@ -479,31 +469,15 @@ model = torch.load(root_dir + 'recover/SSIM/DAE_SSIM.pkl')
 # print (model)
 
 #=============================================
-#        Optimizer
+#        testing
 #=============================================
-
-#import pytorch_ssim
 criterion = pytorch_ssim.SSIM()
-optimizer = torch.optim.Adam(model.parameters(), lr = lr) #, momentum = mom)
 
-#=============================================
-#        Loss Record
-#=============================================
-
-loss_record = []
-# every_loss = []
-# epoch_loss = []
-
-#=============================================
-#        Train
-#=============================================
-
-model.train()
+model.eval()
 for epo in range(epoch):
     for i, data in enumerate(trainloader, 0):
         inputs = data
         inputs = Variable(inputs)
-        optimizer.zero_grad()
         top = model.upward(inputs + white(inputs))
         
         outputs = model.downward(top, shortcut = True)
@@ -514,54 +488,11 @@ for epo in range(epoch):
         
         loss = - criterion(outputs, inputs)
         ssim_value = - loss.data.item()
-        loss.backward()
-        optimizer.step()
         
         if i % 20 == 0:
             inn = inputs[0].view(256, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/SSIM/" + str(epo) + "_" + str(i) + ".png", inn)
+            cv2.imwrite("/home/tk/Documents/recover/SSIM_test/" + str(epo) + "_" + str(i) + ".png", inn)
             
             out = outputs[0].view(256, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/SSIM/" + str(epo) + "_" + str(i) + "_re.png", out)
+            cv2.imwrite("/home/tk/Documents/recover/SSIM_test/" + str(epo) + "_" + str(i) + "_re.png", out)
             
-            loss_record.append(loss.item())
-            
-#        every_loss.append(loss.item())
-#        del inputs, data
-
-        if i % 10 == 0:
-            print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
-#            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
-   
-    gc.collect()
-    plt.close("all")
-
-#    epoch_loss.append(np.mean(every_loss))
-#    every_loss = []
-    
-    if epo % 10 == 0:
-        plt.figure(figsize = (20, 10))
-        plt.plot(loss_record)
-        plt.xlabel('iterations')
-        plt.ylabel('loss')
-        plt.savefig(root_dir + 'recover/SSIM/DAE_loss.png')
-
-#        plt.figure(figsize = (20, 10))
-#        plt.plot(epoch_loss)
-#        plt.xlabel('epocs')
-#        plt.ylabel('epoch_loss')
-#        plt.savefig(root_dir + 'DAE_epoch_loss')
-
-    
-#=============================================
-#        Save Model & Loss
-#=============================================
-
-torch.save(model, root_dir + 'recover/SSIM/DAE_SSIM.pkl')
-
-#with open (root_dir + 'loss_record.json', 'w') as f:
-#    json.dump(loss_record, f)
-    
-# with open (root_dir + 'DAE_loss_epoch.json', 'w') as f:
-#     json.dump(epoch_loss, f)
-    

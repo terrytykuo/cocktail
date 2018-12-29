@@ -91,17 +91,15 @@ def gen_spectrogram(wav):
     spec, _, _, _= plt.specgram(x, Fs=fs, NFFT=2048, noverlap=1900)
     plt.close('all')
     gc.collect()
-    
-    spec = spec[:342, :]
-    spec_0 = spec[np.arange(171)*2, :].reshape(1, 171, -1)
-    spec_1 = spec[np.arange(171)*2 + 1, :].reshape(1, 171, -1)
-    spec_ = np.mean(np.concatenate((spec_0, spec_1), axis = 0), axis = 0)
 
-    spec_ = spec_[:128, :128]
+    freq_wid = 342
+    spec = spec[:freq_wid, :]
+
+    spec_ = spec[:256, :128]
     mean = np.mean(spec_)
     spec_ = spec_/ mean
     spec_[spec_ >= 1] = 1
-    
+
     return spec_
 
 

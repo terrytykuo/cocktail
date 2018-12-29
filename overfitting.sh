@@ -6,6 +6,7 @@
 # DAE1: with FC, all blocks
 # 10 * 10 epochs 12/27)
 
+# 100 + 300
 python3 DAE1.py
 python3 DAE1.py
 python3 DAE1.py

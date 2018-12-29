@@ -23,7 +23,7 @@ import cv2
 #        Hyperparameters
 #=============================================
 
-epoch = 1
+epoch = 5
 lr = 0.001
 mom = 0.9
 bs = 10
@@ -92,7 +92,7 @@ class MSourceDataSet(Dataset):
         
 
         # Overfitting single block
-        with open(clean_dir + 'clean11.json') as f:
+        with open(clean_dir + 'clean9.json') as f:
             clean_list.append(torch.Tensor(json.load(f)))
 
                     
@@ -123,7 +123,7 @@ trainset = MSourceDataSet(clean_dir)
 
 trainloader = torch.utils.data.DataLoader(dataset = trainset,
                                                 batch_size = bs,
-                                                shuffle = False)
+                                                shuffle = True)
 
 del clean_list
 #=============================================
@@ -143,20 +143,20 @@ class ResBlock(nn.Module):
 
     def forward(self, x):
         if self.channels_out > self.channels_in:
-            x1 = F.relu(self.conv1(x))
+            x1 = F.relu(self.conv1(x), inplace = True)
             x1 =        self.conv2(x1)
             x  = self.sizematch(self.channels_in, self.channels_out, x)
-            return F.relu(x + x1)
+            return F.relu(x + x1, inplace = True)
         elif self.channels_out < self.channels_in:
             x = F.relu(self.conv1(x))
             x1 =       self.conv2(x)
             x = x + x1
-            return F.relu(x)
+            return F.relu(x, inplace = True)
         else:
-            x1 = F.relu(self.conv1(x))
+            x1 = F.relu(self.conv1(x), inplace = True)
             x1 =        self.conv2(x1)
             x = x + x1
-            return F.relu(x)
+            return F.relu(x, inplace = True)
 
     def sizematch(self, channels_in, channels_out, x):
         zeros = torch.zeros( (x.size()[0], channels_out - channels_in, x.shape[2], x.shape[3]), dtype = torch.float32)
@@ -174,10 +174,10 @@ class ResTranspose(nn.Module):
 
     def forward(self, x):
         # cin = cout
-        x1 = F.relu(self.deconv1(x))
+        x1 = F.relu(self.deconv1(x), inplace = True)
         x1 =        self.deconv2(x1)
         x = self.sizematch(x)
-        return F.relu(x + x1)
+        return F.relu(x + x1, inplace = True)
 
     def sizematch(self, x):
         # expand
@@ -208,8 +208,8 @@ class ResDAE(nn.Module):
         # 128x128x1
 
         self.upward_net1 = nn.Sequential(
+            ResBlock(1, 1),
             ResBlock(1, 8),
-            ResBlock(8, 8),
             ResBlock(8, 8),
             nn.BatchNorm2d(8),
         )
@@ -279,9 +279,6 @@ class ResDAE(nn.Module):
             ResBlock(512, 512),
             nn.BatchNorm2d(512),
         )
-        
-        self.fc1 = nn.Linear(4096, 512)
-        self.fc2 = nn.Linear(512, 4096)
 
         # 1x1x512
         self.downward_net7 = nn.Sequential(
@@ -360,8 +357,8 @@ class ResDAE(nn.Module):
         # 64x64x8
         self.downward_net1 = nn.Sequential(
             ResBlock(8, 8),
-            ResBlock(8, 4),
-            ResBlock(4, 1),
+            ResBlock(8, 1),
+            ResBlock(1, 1),
             ResBlock(1, 1),
             nn.BatchNorm2d(1),
         )
@@ -377,6 +374,7 @@ class ResDAE(nn.Module):
 #        print ("initial", x.shape)
         x = self.upward_net1(x)
 #        print ("after conv1", x.shape)
+
 
         # 8x64x64
         x = self.upward_net2(x)
@@ -416,56 +414,51 @@ class ResDAE(nn.Module):
         if a7 is not None: x = x * a7
 #        print ("after conv7", x.shape)
 
-        x = x.view(bs, 1, -1)
-        x = self.fc1(x)
+        # 512x1x1
 
         return x
 
 
     def downward(self, y, shortcut= True):
 #        print ("begin to downward, y.shape = ", y.shape)
-        
-        y = self.fc2(y)
-        y = y.view(bs, 512, 4, 2)
-        
-        # 512x2x2
+        # 512x1x1
         y = self.downward_net7(y)
 #        print ("after down7", y.shape)
 
 
-        # 256x4x4
+        # 256x2x2
         y = self.downward_net6(y)
 #        print ("after down6", y.shape)
 
-        # 128x8x8
+        # 128x4x4
         if shortcut:
             y = torch.cat((y, self.x5), 1)
             y = F.relu(self.uconv5(y))
         y = self.downward_net5(y)
 #        print ("after down5", y.shape)
 
-        # 64x16x16
+        # 64x8x8
         if shortcut:
             y = torch.cat((y, self.x4), 1)
             y = F.relu(self.uconv4(y))
         y = self.downward_net4(y)
 #        print ("after down4", y.shape)
 
-        # 32x32x32
+        # 32x16x16
         if shortcut:
             y = torch.cat((y, self.x3), 1)
             y = F.relu(self.uconv3(y))
         y = self.downward_net3(y)
 #        print ("after down3", y.shape)
 
-        # 16x64x64
+        # 16x32x32
         if shortcut:
             y = torch.cat((y, self.x2), 1)
             y = F.relu(self.uconv2(y))
         y = self.downward_net2(y)
 #        print ("after down2", y.shape)
 
-        # 8x128x128
+        # 8x64x64
         y = self.downward_net1(y)
 #        print ("after down1", y.shape)
  
@@ -473,9 +466,8 @@ class ResDAE(nn.Module):
 
         return y
 
-
-#model = ResDAE()
-model = torch.load(root_dir + 'recover/SSIM/DAE_SSIM.pkl')
+# model = ResDAE()
+model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
 # print (model)
 
 #=============================================
@@ -493,6 +485,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr = lr) #, momentum = mom)
 loss_record = []
 # every_loss = []
 # epoch_loss = []
+
 
 #=============================================
 #        Train
@@ -517,14 +510,20 @@ for epo in range(epoch):
         loss.backward()
         optimizer.step()
         
-        if i % 20 == 0:
+        loss_record.append(loss.item())
+        plt.figure(figsize = (20, 10))
+        plt.plot(loss_record)
+        plt.xlabel('iterations')
+        plt.ylabel('loss')
+        plt.savefig(root_dir + 'recover/SSIM-CONV/DAE_loss.png')
+        
+        if i % 5 == 0:
             inn = inputs[0].view(256, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/SSIM/" + str(epo) + "_" + str(i) + ".png", inn)
+            cv2.imwrite("/home/tk/Documents/recover/SSIM-CONV/test/" + str(epo) + "_" + str(i) + ".png", inn)
             
             out = outputs[0].view(256, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/SSIM/" + str(epo) + "_" + str(i) + "_re.png", out)
+            cv2.imwrite("/home/tk/Documents/recover/SSIM-CONV/test/" + str(epo) + "_" + str(i) + "_re.png", out)
             
-            loss_record.append(loss.item())
             
 #        every_loss.append(loss.item())
 #        del inputs, data
@@ -539,12 +538,7 @@ for epo in range(epoch):
 #    epoch_loss.append(np.mean(every_loss))
 #    every_loss = []
     
-    if epo % 10 == 0:
-        plt.figure(figsize = (20, 10))
-        plt.plot(loss_record)
-        plt.xlabel('iterations')
-        plt.ylabel('loss')
-        plt.savefig(root_dir + 'recover/SSIM/DAE_loss.png')
+
 
 #        plt.figure(figsize = (20, 10))
 #        plt.plot(epoch_loss)
@@ -557,11 +551,28 @@ for epo in range(epoch):
 #        Save Model & Loss
 #=============================================
 
-torch.save(model, root_dir + 'recover/SSIM/DAE_SSIM.pkl')
+criterion = pytorch_ssim.SSIM()
 
-#with open (root_dir + 'loss_record.json', 'w') as f:
-#    json.dump(loss_record, f)
-    
-# with open (root_dir + 'DAE_loss_epoch.json', 'w') as f:
-#     json.dump(epoch_loss, f)
-    
+model.eval()
+for epo in range(epoch):
+    for i, data in enumerate(trainloader, 0):
+        inputs = data
+        inputs = Variable(inputs)
+        top = model.upward(inputs + white(inputs))
+        
+        outputs = model.downward(top, shortcut = True)
+        inputs = inputs.view(bs, 1, 256, 128)
+        outputs = outputs.view(bs, 1, 256, 128)
+        #with open ( root_dir + 'recover/L1loss_FC/recover_pic_epo_' + str(epo), 'w') as f:
+        #    json.dump(outputs.tolist(), f)
+        
+        loss = - criterion(outputs, inputs)
+        ssim_value = - loss.data.item()
+        
+        if i % 20 == 0:
+            inn = inputs[0].view(256, 128).detach().numpy() * 255
+            cv2.imwrite("/home/tk/Documents/recover/SSIM-CONV/test/" + str(epo) + "_" + str(i) + ".png", inn)
+            
+            out = outputs[0].view(256, 128).detach().numpy() * 255
+            cv2.imwrite("/home/tk/Documents/recover/SSIM-CONV/test/" + str(epo) + "_" + str(i) + "_re.png", out)
+            

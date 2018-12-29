@@ -5,6 +5,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import torch.utils.data as data
 import torch.nn.init as init
+import pytorch_ssim
 
 import torchvision
 import torchvision.transforms as transforms
@@ -22,8 +23,8 @@ import cv2
 #        Hyperparameters
 #=============================================
 
-epoch = 10
-lr = 0.0000001
+epoch = 2
+lr = 0.001
 mom = 0.9
 bs = 10
 
@@ -91,13 +92,13 @@ class MSourceDataSet(Dataset):
         
 
         # Overfitting single block
-#        with open(clean_dir + 'clean3.json') as f:
-#            clean_list.append(torch.Tensor(json.load(f)))
+        with open(clean_dir + 'clean3.json') as f:
+            clean_list.append(torch.Tensor(json.load(f)))
 
                     
-        for i in cleanfolder:
-            with open(clean_dir + '{}'.format(i)) as f:
-                clean_list.append(torch.Tensor(json.load(f)))
+#        for i in cleanfolder:
+#            with open(clean_dir + '{}'.format(i)) as f:
+#                clean_list.append(torch.Tensor(json.load(f)))
         
         
         cleanblock = torch.cat(clean_list, 0)
@@ -368,7 +369,7 @@ class ResDAE(nn.Module):
 
 
     def upward(self, x, a7=None, a6=None, a5=None, a4=None, a3=None, a2=None):
-        x = x.view(bs, 1, 128, 128)
+        x = x.view(bs, 1, 256, 128)
         # 1x128x128
 #        print ("initial", x.shape)
         x = self.upward_net1(x)
@@ -466,15 +467,16 @@ class ResDAE(nn.Module):
         return y
 
 # model = ResDAE()
-model = torch.load(root_dir + "DAE.pkl")
+model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
 # print (model)
 
 #=============================================
 #        Optimizer
 #=============================================
 
-criterion = nn.L1Loss()
-optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
+#import pytorch_ssim
+criterion = pytorch_ssim.SSIM()
+optimizer = torch.optim.Adam(model.parameters(), lr = lr) #, momentum = mom)
 
 #=============================================
 #        Loss Record
@@ -495,27 +497,40 @@ for epo in range(epoch):
         inputs = data
         inputs = Variable(inputs)
         optimizer.zero_grad()
-
-        top = model.upward(inputs+ white(inputs))
-        outputs = model.downward(top, shortcut = True)
+        top = model.upward(inputs + white(inputs))
         
-        loss = criterion(outputs, inputs)
+        outputs = model.downward(top, shortcut = True)
+        inputs = inputs.view(bs, 1, 256, 128)
+        outputs = outputs.view(bs, 1, 256, 128)
+        #with open ( root_dir + 'recover/L1loss_FC/recover_pic_epo_' + str(epo), 'w') as f:
+        #    json.dump(outputs.tolist(), f)
+        
+        loss = - criterion(outputs, inputs)
+        ssim_value = - loss.data.item()
         loss.backward()
         optimizer.step()
         
-        if i % 50 == 0:
-            inn = inputs[0].view(128, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/overfitting_block2/" + str(epo) + "_" + str(i) + ".png", inn)
+        loss_record.append(loss.item())
+        plt.figure(figsize = (20, 10))
+        plt.plot(loss_record)
+        plt.xlabel('iterations')
+        plt.ylabel('loss')
+        plt.savefig(root_dir + 'recover/SSIM-CONV/DAE_loss.png')
+        
+        if i % 20 == 0:
+            inn = inputs[0].view(256, 128).detach().numpy() * 255
+            cv2.imwrite("/home/tk/Documents/recover/SSIM-CONV/" + str(epo) + "_" + str(i) + ".png", inn)
             
-            out = outputs[0].view(128, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/overfitting_block2/" + str(epo) + "_" + str(i) + "_re.png", out)
-#            loss_record.append(loss.item())
-
+            out = outputs[0].view(256, 128).detach().numpy() * 255
+            cv2.imwrite("/home/tk/Documents/recover/SSIM-CONV/" + str(epo) + "_" + str(i) + "_re.png", out)
+            
+            
 #        every_loss.append(loss.item())
-        del inputs, data
+#        del inputs, data
 
         if i % 10 == 0:
             print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
+#            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
    
     gc.collect()
     plt.close("all")
@@ -523,12 +538,7 @@ for epo in range(epoch):
 #    epoch_loss.append(np.mean(every_loss))
 #    every_loss = []
     
-#    if epo % 10 == 0:
-#        plt.figure(figsize = (20, 10))
-#        plt.plot(loss_record)
-#        plt.xlabel('iterations')
-#        plt.ylabel('loss')
-#        plt.savefig(root_dir + 'DAE_batchloss.png')
+
 
 #        plt.figure(figsize = (20, 10))
 #        plt.plot(epoch_loss)
@@ -541,27 +551,4 @@ for epo in range(epoch):
 #        Save Model & Loss
 #=============================================
 
-torch.save(model, root_dir + 'DAE.pkl')
-
-# with open (root_dir + 'DAE_loss_record.json', 'w') as f:
-#    json.dump(loss_record, f)
-    
-# with open (root_dir + 'DAE_loss_epoch.json', 'w') as f:
-#     json.dump(epoch_loss, f)
-    
-
-#=============================================
-#        plotting
-#=============================================
-
-# plt.figure(figsize = (20, 10))
-# plt.plot(loss_record)
-# plt.xlabel('iterations')
-# plt.ylabel('loss')
-# plt.savefig('DAE_loss.png')
-
-# plt.figure(figsize = (20, 10))
-# plt.plot(epoch_loss)
-# plt.xlabel('iterations')
-# plt.ylabel('epoch_loss')
-# plt.savefig('DAE_epoch_loss')
+torch.save(model, root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
