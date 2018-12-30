@@ -175,7 +175,7 @@ class featureNet(nn.Module):
         return x
 
 #feature_model = featureNet()
-feature_model = torch.load(root_dir + 'FeatureNet_ada_0.0001.pkl')
+feature_model = torch.load(root_dir + 'FeatureNet.pkl')
     
 '''ANet'''
 class ANet(nn.Module):
@@ -554,8 +554,8 @@ class ResDAE(nn.Module):
         # 1x256x128
         return y
 
-# model = ResDAE()
-DAEmodel = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
+# Res_model = ResDAE()
+Res_model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
 # print (model)
 
 #=============================================
