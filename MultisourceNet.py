@@ -23,10 +23,10 @@ import cv2
 #        Hyperparameters
 #=============================================
 
-epoch = 2
+epoch = 19
 lr = 0.001
 mom = 0.9
-bs = 10
+bs = 1
 
 #=============================================
 #        Define Functions
@@ -69,90 +69,93 @@ if server == True:
 
 
 clean_dir = root_dir + 'clean/' 
-# mix_dir = root_dir + 'mix/' 
-# clean_label_dir = root_dir + 'clean_labels/' 
-# mix_label_dir = root_dir + 'mix_labels/' 
+mix_dir = root_dir + 'mix/' 
+clean_label_dir = root_dir + 'clean_labels/' 
+mix_label_dir = root_dir + 'mix_labels/' 
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
 
-# mixfolder = os.listdir(mix_dir)
-# mixfolder.sort()
+mixfolder = os.listdir(mix_dir)
+mixfolder.sort()
 
 
 clean_list = []
-# mix_list = []
+mix_list = []
+mix_label_list = []
+feature_list = []
 
 #=============================================
 #       Define Datasets
 #=============================================
 
 
+class mixDataSet(Dataset):
+    
+    def __init__(self, mix_dir, mix_label_dir):           
+        
+        with open(mix_dir + 'mix3.json') as f:
+            mix_list.append(torch.Tensor(json.load(f)))
+        
+        with open(mix_label_dir + 'mix_label3.json') as f:
+            mix_label_list.append(torch.Tensor(json.load(f)))
+        
+        mixblock = torch.cat(mix_list, 0)
+        mixlabel = torch.cat(mix_label_list, 0)
+        
+        self.mix_spec = mixblock
+        self.mix_label = mixlabel
+                
+        
+    def __len__(self):
+        return self.mix_spec.shape[0]
+
+
+    def __getitem__(self, spec_index, label_index): 
+
+        mix_spec = self.mix_spec[spec_index]
+        mix_label = self.mix_label[label_index]
+        return mix_spec, mix_label
+
+
 class featureDataSet(Dataset):
     
     def __init__(self, clean_dir):
+        
 
         with open(clean_dir + 'clean3.json') as f:
-            clean_list.append(torch.Tensor(json.load(f)))
+            feature_list.append(torch.Tensor(json.load(f)))      
         
-        cleanblock = torch.cat(clean_list, 0)
-#         mixblock = torch.cat(mix_list, 0)
-        self.spec = cleanblock
+        featureblock = torch.cat(feature_list, 0)
+        self.featurespec = featureblock
                 
         
     def __len__(self):
-        return self.spec.shape[0]
+        return self.featurespec.shape[0]
 
                 
     def __getitem__(self, index): 
 
-        spec = self.spec[index]
-        return spec
-
-
-class mixDataSet(Dataset):
-    
-    def __init__(self, clean_dir):
-        
-
-        # Overfitting single block
-        with open(mix_dir + 'clean3.json') as f:
-            clean_list.append(torch.Tensor(json.load(f)))
-
-                    
-#        for i in cleanfolder:
-#            with open(clean_dir + '{}'.format(i)) as f:
-#                clean_list.append(torch.Tensor(json.load(f)))
-        
-        
-        cleanblock = torch.cat(clean_list, 0)
-#         mixblock = torch.cat(mix_list, 0)
-        self.spec = cleanblock
-                
-        
-    def __len__(self):
-        return self.spec.shape[0]
-
-                
-    def __getitem__(self, index): 
-
-        spec = self.spec[index]
-        return spec
+        featurespec = self.featurespec[index]
+        return featurespec
     
 #=============================================
 #        Define Dataloader
 #=============================================
 
+
+mixset = mixDataSet(mix_dir, mix_label_dir)
 featureset = featureDataSet(clean_dir)
 
-mixset = mixDataSet(mix_dir)
-trainloader = torch.utils.data.DataLoader(dataset = trainset,
-                                                batch_size = bs,
-                                                shuffle = True)
+# mixloader = torch.utils.data.DataLoader(dataset = mixset,
+#                                               batch_size = bs,
+#                                               shuffle = False)
+
+# featureloader = torch.utils.data.DataLoader(dataset = featureset,
+#                                          batch_size = bs,
+#                                          shuffle = False)
 
 
-
-del clean_list
 #=============================================
 #        Model
 #=============================================
@@ -160,25 +163,26 @@ del clean_list
 '''featureNet'''
 class featureNet(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
-        self.fc1 = nn.Linear(1025*16, 500)
+        super(featureNet, self).__init__()
+        self.fc1 = nn.Linear(256*128, 500)
         self.fc2 = nn.Linear(500, 256)
         self.fc3 = nn.Linear(256, 10)
 
         
     def forward(self, x):
-        x = x.view(-1, 1025*16)
+        x = x.view(-1, 256*128)
         x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-#        x = torch.sigmoid(self.fc3(x))
+        feat = F.relu(self.fc2(x))
+        x = torch.sigmoid(self.fc3(feat))
         
-        return x
+        return feat, x
 
-#feature_model = featureNet()
+# feature_model = featureNet()
 feature_model = torch.load(root_dir + 'FeatureNet.pkl')
     
 '''ANet'''
 class ANet(nn.Module):
+    
     def __init__(self):
         super(ANet, self).__init__()
 
@@ -217,7 +221,7 @@ class ANet(nn.Module):
         a3 = self.linear3(x).view(bs, 32, 1, 1)
         a2 = self.linear2(x).view(bs, 16, 1, 1)
 
-return a7, a6, a5, a4, a3, a2
+        return a7, a6, a5, a4, a3, a2
 
 A_model = ANet()
 
@@ -564,7 +568,7 @@ Res_model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
 
 #import pytorch_ssim
 criterion = pytorch_ssim.SSIM()
-optimizer = torch.optim.Adam(model.parameters(), lr = lr) #, momentum = mom)
+optimizer = torch.optim.Adam(Res_model.parameters(), lr = lr) #, momentum = mom)
 
 #=============================================
 #        Loss Record
@@ -579,64 +583,70 @@ loss_record = []
 #        Train
 #=============================================
 
-model.train()
+Res_model.train()
 for epo in range(epoch):
-    for i, data in enumerate(trainloader, 0):
-        inputs = data
-        inputs = Variable(inputs)
-        optimizer.zero_grad()
-        top = model.upward(inputs + white(inputs))
-        
-        outputs = model.downward(top, shortcut = True)
-        inputs = inputs.view(bs, 1, 256, 128)
-        outputs = outputs.view(bs, 1, 256, 128)
-        #with open ( root_dir + 'recover/L1loss_FC/recover_pic_epo_' + str(epo), 'w') as f:
-        #    json.dump(outputs.tolist(), f)
-        
-        loss = - criterion(outputs, inputs)
-        ssim_value = - loss.data.item()
-        loss.backward()
-        optimizer.step()
-        
-        loss_record.append(loss.item())
-        plt.figure(figsize = (20, 10))
-        plt.plot(loss_record)
-        plt.xlabel('iterations')
-        plt.ylabel('loss')
-        plt.savefig(root_dir + 'recover/SSIM-CONV/DAE_loss.png')
-        
-        if i % 20 == 0:
-            inn = inputs[0].view(256, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/SSIM-CONV/" + str(epo) + "_" + str(i) + ".png", inn)
-            
-            out = outputs[0].view(256, 128).detach().numpy() * 255
-            cv2.imwrite("/home/tk/Documents/recover/SSIM-CONV/" + str(epo) + "_" + str(i) + "_re.png", out)
-            
-            
-#        every_loss.append(loss.item())
-#        del inputs, data
+    
+    # get mix spec & label
+    mix_spec, mix_label = mixset.__getitem__(spec_index = epo*11 + 10, label_index = epo) 
+    inputs = Variable(mix_spec)
+    
+    optimizer.zero_grad()
+    
+    # get feature
+    print ("mix_label = ", mix_label[0]) # the assigned attended sound source
+    featurespec = featureset.__getitem__(int(mix_label[0]) * 20) # go to cleanblock to grab clean source, and extract the feature
+    
+    feat, _ = feature_model(featurespec) # feed in clean spectrogram to extract feature
+    
+    # feed in feature to ANet
+    att = A_model(feat)
+    
+    # Res_model
+    top = Res_model.upward(inputs) #+ white(inputs))
+    outputs = Res_model.downward(top, shortcut = True)
+    outputs = outputs.view(bs, 1, 256, 128)
+    
+    
+    target, _ = mixset.__getitem__(spec_index = epo * 11 + int(mix_label[0]), label_index = 0) # don't need label_index here, it can be random
+    target = target.view(bs, 1, 256, 128)
+    loss = - criterion(outputs, target)
+    ssim_value = - loss.data.item()
+    loss.backward()
+    optimizer.step()
+    
+    
 
-        if i % 10 == 0:
-            print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
+    loss_record.append(loss.item())
+    plt.figure(figsize = (20, 10))
+    plt.plot(loss_record)
+    plt.xlabel('iterations')
+    plt.ylabel('loss')
+    plt.savefig(root_dir + 'recover/combine/DAE_loss.png')
+    
+    inn = inputs.view(256, 128).detach().numpy() * 255
+    inn = np.clip(inn, np.min(inn), 1)
+    cv2.imwrite("/home/tk/Documents/recover/combine/" + str(epo)  + ".png", inn)
+
+    tarr = target.view(256, 128).detach().numpy() * 255
+    tarr = np.clip(tarr, np.min(tarr), 1)
+    cv2.imwrite("/home/tk/Documents/recover/combine/" + str(epo)  + "_tar.png", tarr)
+
+    outt = outputs.view(256, 128).detach().numpy() * 255
+    outt = np.clip(outt, np.min(outt), 1)
+    cv2.imwrite("/home/tk/Documents/recover/combine/" + str(epo)  + "_re.png", outt)
+
+    
+    print ('[%d] loss: %.3f' % (epo, loss.item()))
 #            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
    
     gc.collect()
     plt.close("all")
 
-#    epoch_loss.append(np.mean(every_loss))
-#    every_loss = []
-    
 
-
-#        plt.figure(figsize = (20, 10))
-#        plt.plot(epoch_loss)
-#        plt.xlabel('epocs')
-#        plt.ylabel('epoch_loss')
-#        plt.savefig(root_dir + 'DAE_epoch_loss')
 
     
 #=============================================
 #        Save Model & Loss
 #=============================================
 
-torch.save(model, root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
+# torch.save(model, root_dir + 'recover/combine/combine_SSIM.pkl')

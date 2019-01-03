@@ -43,10 +43,8 @@ clean_label_list = []
 #========================================
 
 class featureDataSet(Dataset):
-    
     def __init__(self, clean_dir, clean_label_dir):
                 
-
         for i in cleanfolder:
             with open(clean_dir + '{}'.format(i)) as f:
                 clean_list.append(torch.Tensor(json.load(f)))

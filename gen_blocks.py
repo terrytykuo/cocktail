@@ -93,8 +93,8 @@ for p in range(blocks_volume):
         
         # one-hot encoding
         index = int(i/((10/length) * multiplication))
-        z = np.zeros((10))
-        z[index] = 1
+        z = np.zeros((10), dtype = int)
+        z[index] = int(1)
         pc.append(z) # record indexs
         print ("i =", i, "; index =", index ,"\n", "z =",z)
     
