@@ -94,10 +94,10 @@ class mixDataSet(Dataset):
     
     def __init__(self, mix_dir, mix_label_dir):           
         
-        with open(mix_dir + 'mix3.json') as f:
+        with open(mix_dir + 'mix2.json') as f:
             mix_list.append(torch.Tensor(json.load(f)))
         
-        with open(mix_label_dir + 'mix_label3.json') as f:
+        with open(mix_label_dir + 'mix_label2.json') as f:
             mix_label_list.append(torch.Tensor(json.load(f)))
         
         mixblock = torch.cat(mix_list, 0)
@@ -123,7 +123,7 @@ class featureDataSet(Dataset):
     def __init__(self, clean_dir):
         
 
-        with open(clean_dir + 'clean3.json') as f:
+        with open(clean_dir + 'clean15.json') as f:
             feature_list.append(torch.Tensor(json.load(f)))      
         
         featureblock = torch.cat(feature_list, 0)

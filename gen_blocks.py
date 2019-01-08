@@ -43,7 +43,7 @@ labels_path = root_dir + 'clean_labels/'
 multiplication = 1
 
 # blocks 
-blocks_volume = 20
+blocks_volume = 60
 
 #minimum audio length
 length = 0.5
@@ -95,7 +95,7 @@ for p in range(blocks_volume):
         index = int(i/((10/length) * multiplication))
         z = np.zeros((10), dtype = int)
         z[index] = int(1)
-        pc.append(z) # record indexs
+        pc.append(index) # record indexs
         print ("i =", i, "; index =", index ,"\n", "z =",z)
     
     big_matrix = np.stack(small_pcs)
