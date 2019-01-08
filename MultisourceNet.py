@@ -595,7 +595,6 @@ for epo in range(epoch):
     # get feature
     print ("mix_label = ", mix_label[0]) # the assigned attended sound source
     featurespec = featureset.__getitem__(int(mix_label[0]) * 20) # go to cleanblock to grab clean source, and extract the feature
-    
     feat, _ = feature_model(featurespec) # feed in clean spectrogram to extract feature
     
     # feed in feature to ANet
@@ -624,16 +623,16 @@ for epo in range(epoch):
     plt.savefig(root_dir + 'recover/combine/DAE_loss.png')
     
     inn = inputs.view(256, 128).detach().numpy() * 255
-    inn = np.clip(inn, np.min(inn), 1)
-    cv2.imwrite("/home/tk/Documents/recover/combine/" + str(epo)  + ".png", inn)
+    np.clip(inn, np.min(inn), 1)
+    cv2.imwrite("/home/tk/Documents/recover/combine/" + str(epo)  + "_mix.png", inn)
 
     tarr = target.view(256, 128).detach().numpy() * 255
-    tarr = np.clip(tarr, np.min(tarr), 1)
+    np.clip(tarr, np.min(tarr), 1)
     cv2.imwrite("/home/tk/Documents/recover/combine/" + str(epo)  + "_tar.png", tarr)
 
     outt = outputs.view(256, 128).detach().numpy() * 255
-    outt = np.clip(outt, np.min(outt), 1)
-    cv2.imwrite("/home/tk/Documents/recover/combine/" + str(epo)  + "_re.png", outt)
+    np.clip(outt, np.min(outt), 1)
+    cv2.imwrite("/home/tk/Documents/recover/combine/" + str(epo)  + "_sep.png", outt)
 
     
     print ('[%d] loss: %.3f' % (epo, loss.item()))

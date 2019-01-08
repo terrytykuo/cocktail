@@ -4,8 +4,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import torch.utils.data as data
-from torch.autograd import Variable
-
 
 import torchvision
 import torchvision.transforms as transforms
@@ -23,14 +21,14 @@ import numpy as np
 #        Hyperparameters
 #=============================================
 
-epoch = 10
-lr = 0.01
-mom = 0.8
-bs = 10
+epoch = 2
+lr = 0.001
+mom = 0.9
+bs = 16
 
 #======================================
-clean_dir = '/home/tk/Documents/clean/' 
-clean_label_dir = '/home/tk/Documents/clean_labels/' 
+clean_dir = '/home/tk/Documents/clean_test/' 
+clean_label_dir = '/home/tk/Documents/clean_labels_test/' 
 #========================================
 
 cleanfolder = os.listdir(clean_dir)
@@ -77,7 +75,7 @@ class featureDataSet(Dataset):
 #           Dataloader 
 #=================================================
 featureset = featureDataSet(clean_dir, clean_label_dir)
-trainloader = torch.utils.data.DataLoader(dataset = featureset,
+testloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
                                                 shuffle = True)
 
@@ -107,6 +105,8 @@ class featureNet(nn.Module):
         return F.log_softmax(x, dim = 1)
     
 model = featureNet()
+
+model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
 print (model)
 
 #============================================
@@ -122,34 +122,37 @@ optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
 loss_record = []
 every_loss = []
 epoch_loss = []
+correct = 0
+total = 0
+blank = []
 
+model.eval()
 
-model.train()
-for epo in range(epoch):
-    for i, data in enumerate(trainloader, 0):
-        
+with torch.no_grad():       
+    for i, data in enumerate(testloader, 0):
         inputs, labels = data
-        inputs = Variable(inputs)
-        
-        optimizer.zero_grad()
         outputs = model(inputs)
         labels = labels.to(dtype=torch.long)
 
         loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
+        
+        _, predicted = torch.max(outputs, 1)
+        
+        total += labels.size(0)
+        
+        correct += (predicted == labels).sum()
+        print ("correct = ", correct, 'total =', total)
+        
+        accuracy = 100 * correct/ total
         loss_record.append(loss.item())
         every_loss.append(loss.item())
-        print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
+        print ('[%d, %5d] loss: %.3f, acc: %.3f' % (epoch, i, loss.item(), accuracy))
         
     epoch_loss.append(np.mean(every_loss))
     every_loss = []
 
             
-            
-torch.save(model.state_dict(), '/home/tk/Documents/FeatureNet.pkl')
-
-
+           
 plt.figure(figsize = (20, 10))
 plt.plot(loss_record)
 plt.xlabel('iterations')
