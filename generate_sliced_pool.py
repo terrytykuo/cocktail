@@ -52,5 +52,6 @@ for j in sliced_list:
     slice_it(j, '/home/tk/Documents/slice_10sec/', '/home/tk/Documents/sliced_pool/', 500)
     
 ##=============================
-# This file will create 1000*20 = 20,000 audio files, where 1000 = 100(_60~_160) * 10 # (full audio files) * (10 sec/0.5 sec)
+# This file will create 1000*20 = 20,000 audio files, 
+# where 1000 = 100 (_60~_160) * 10 (numbers of full audio files) * (10 sec/0.5 sec)
 ##=============================
