@@ -4,6 +4,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import torch.utils.data as data
+from torch.autograd import Variable
+
 
 import torchvision
 import torchvision.transforms as transforms
@@ -14,61 +16,51 @@ import pickle
 import os
 import json
 import numpy as np
+import random
+random.seed(7)
+
+
+#=============================================
+#        Hyperparameters
+#=============================================
+
+epoch = 5
+lr = 0.001
+mom = 0.8
+bs = 10
 
 #======================================
-clean_dir = '/home/tk/Documents/clean/' 
-mix_dir = '/home/tk/Documents/mix/' 
-clean_label_dir = '/home/tk/Documents/clean_labels/' 
-mix_label_dir = '/home/tk/Documents/mix_labels/' 
+clean_dir = '/home/tk/Documents/clean/second_part/' 
+clean_label_dir = '/home/tk/Documents/clean_labels/second_part/' 
 #========================================
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
 
-mixfolder = os.listdir(mix_dir)
-mixfolder.sort()
-
 cleanlabelfolder = os.listdir(clean_label_dir)
 cleanlabelfolder.sort()
 
-mixlabelfolder = os.listdir(mix_label_dir)
-mixlabelfolder.sort()
-
 clean_list = []
-mix_list = []
 clean_label_list = []
-mix_label_list = []
 
 #========================================
 
-class MSourceDataSet(Dataset):
-    
-    def __init__(self, clean_dir, mix_dir, clean_label_dir, mix_label_dir):
+class featureDataSet(Dataset):
+    def __init__(self, clean_dir, clean_label_dir):
                 
-
         for i in cleanfolder:
             with open(clean_dir + '{}'.format(i)) as f:
                 clean_list.append(torch.Tensor(json.load(f)))
-
-        for i in mixfolder:
-            with open(mix_dir + '{}'.format(i)) as f:
-                mix_list.append(torch.Tensor(json.load(f)))
                 
         for i in cleanlabelfolder:
             with open(clean_label_dir + '{}'.format(i)) as f:
                 clean_label_list.append(torch.Tensor(json.load(f)))
-
-        for i in mixlabelfolder:
-            with open(mix_label_dir + '{}'.format(i)) as f:
-                mix_label_list.append(torch.Tensor(json.load(f)))
         
         cleanblock = torch.cat(clean_list, 0)
-        mixblock = torch.cat(mix_list, 0)
-        self.spec = torch.cat([cleanblock, mixblock], 0)
+        self.spec = torch.cat([cleanblock], 0)
                 
         cleanlabel = torch.cat(clean_label_list, 0)
-        mixlabel = torch.cat(mix_label_list, 0)
-        self.label = torch.cat([cleanlabel, mixlabel], 0)
+        self.label = torch.cat([cleanlabel], 0)
 
         
     def __len__(self):
@@ -80,38 +72,56 @@ class MSourceDataSet(Dataset):
         spec = self.spec[index]
         label = self.label[index]
         return spec, label
+
     
-trainset = MSourceDataSet(clean_dir, mix_dir, clean_label_dir, mix_label_dir)
-trainloader = torch.utils.data.DataLoader(dataset = trainset,
-                                                batch_size = 16,
+#=================================================    
+#           Dataloader 
+#=================================================
+featureset = featureDataSet(clean_dir, clean_label_dir)
+trainloader = torch.utils.data.DataLoader(dataset = featureset,
+                                                batch_size = bs,
                                                 shuffle = True)
 
-# testloader = torch.utils.data.DataLoader(dataset = testset,
-#                                                batch_size = 4,
-#                                                shuffle = True)
-
-
-class Net(nn.Module):
+#=================================================    
+#           model 
+#=================================================
+class featureNet(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
-        self.fc1 = nn.Linear(1025*16, 500)
-        self.fc2 = nn.Linear(500, 256)
+        super(featureNet, self).__init__()
+        self.conv1 = nn.Conv2d(1, 4, kernel_size=(2,2), stride=2)
+        self.conv2 = nn.Conv2d(4, 8, kernel_size=(2,2), stride=2)
+        self.maxpool = nn.MaxPool2d(kernel_size = (2,2))
+        self.batchnorm = nn.BatchNorm2d(8)
+        self.fc1 = nn.Linear(16*8*8, 512)
+        self.fc2 = nn.Linear(512, 256)
         self.fc3 = nn.Linear(256, 10)
 
         
     def forward(self, x):
-        x = x.view(-1, 1025*16)
+        x = x.view(bs, 1 ,256, 128)
+        x = F.relu(self.maxpool(self.conv1(x)))
+        x = F.relu(self.maxpool(self.conv2(x)))
+        x = self.batchnorm(x)
+        x = x.view(-1, 1024)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = torch.sigmoid(self.fc3(x))
+        x = self.fc3(x)
         
-        return x
+        return F.log_softmax(x, dim = 1)
     
-model = Net()
+model = featureNet()
+model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
 print (model)
 
-criterion = torch.nn.BCELoss()
-optimizer = torch.optim.SGD(model.parameters(), lr = 0.0001, momentum = 0.00003)
+#============================================
+#              optimizer
+#============================================
+criterion = torch.nn.NLLLoss()
+optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
+
+#============================================
+#              training
+#============================================
 
 loss_record = []
 every_loss = []
@@ -119,31 +129,29 @@ epoch_loss = []
 
 
 model.train()
-for epoch in range(70):
-    
-    
+for epo in range(epoch):
     for i, data in enumerate(trainloader, 0):
         
         inputs, labels = data
-
-        optimizer.zero_grad()
+        inputs = Variable(inputs)
         
+        optimizer.zero_grad()
         outputs = model(inputs)
+        labels = labels.to(dtype=torch.long)
+
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
         loss_record.append(loss.item())
         every_loss.append(loss.item())
-        print ('[%d, %5d] loss: %.3f' % (epoch, i, loss.item()))
+        print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
         
     epoch_loss.append(np.mean(every_loss))
     every_loss = []
 
             
             
-torch.save(model, '/home/tk/Documents/FeatureNet_ada_0.0001.pkl')
-with open ('/home/tk/Documents/FeatureNet_0.0001.json', 'w') as f:
-    json.dump(epoch_loss, f)
+torch.save(model.state_dict(), '/home/tk/Documents/FeatureNet.pkl')
 
 
 plt.figure(figsize = (20, 10))

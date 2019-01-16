@@ -4,6 +4,7 @@ from pydub.utils import make_chunks
 import os
 import gc
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 import scipy
 import scipy.io.wavfile
 import numpy as np
@@ -14,29 +15,44 @@ import data_process
 
 ## 10 sec slicing:
 
-# full audio will be stored here
-full_audio_path = '/home/tk/Documents/full_audio/' 
+#=============================================
+#        path
+#=============================================
 
-# 10 sec sliced will be stored here
-sec10_sliced_path = '/home/tk/Documents/slice_10sec/' 
+server = False
 
-# 0.1 sec slices will be stored here
-point_sec_sliced_path = '/home/tk/Documents/slice_pointsec/' 
+root_dir = '/home/tk/Documents/'
+if server == True:
+    root_dir = '/home/guotingyou/cocktail_phase2/'
 
-# block will be stored here
-mix_path = '/home/tk/Documents/mix/'  
-label_path = '/home/tk/Documents/mix_labels/'
+
+clean_dir = root_dir + 'clean/' 
+mix_dir = root_dir + 'mix/' 
+clean_label_dir = root_dir + 'clean_labels/' 
+mix_label_dir = root_dir + 'mix_labels/' 
+
+cleanfolder = os.listdir(clean_dir)
+cleanfolder.sort()
+
+# mixfolder = os.listdir(mix_dir)
+# mixfolder.sort()
+
+
+clean_list = []
+# mix_list = []
 
 # controls datapoint in single column
 multiplication = 1
 
 # blocks 
-blocks_volume = 25
+blocks_volume = 10
 
+#minimum audio length
+length = 0.5
 #======================================================================
 
 
-audio_list = os.listdir(full_audio_path)
+audio_list = os.listdir(root_dir + "full_audio/")
 if ".DS_Store" in audio_list:
     audio_list.remove(".DS_Store")
 print ("There are", len(audio_list), "fully concatenated files")
@@ -45,9 +61,9 @@ print ("There are", len(audio_list), "fully concatenated files")
 for p in range(blocks_volume):
 
     # remove current files 
-    to_clear = os.listdir(point_sec_sliced_path)
+    to_clear = os.listdir(root_dir + "slice_pointsec/")
     for c in to_clear:
-        os.remove(point_sec_sliced_path + c)
+        os.remove(root_dir + "slice_pointsec/" + c)
 
     pieces = p # controls which 10 sec segments will be processed 0.1 sec slicing 
 
@@ -61,12 +77,12 @@ for p in range(blocks_volume):
     for file in file_name:
         for i in range(pieces * multiplication , (pieces + 1) * multiplication):
             name = file + "_{0}.wav".format(i)
-            data_process.slice_it(name, sec10_sliced_path, point_sec_sliced_path, length = 100)
+            data_process.slice_it(name, root_dir + "slice_10sec/", root_dir + "slice_pointsec/", length *1000)
 
     ## checkpoint: spec_name should have 1,000 files
-    spec_name = os.listdir(point_sec_sliced_path)
-    if len(spec_name) == 1000 * multiplication: 
-        print (1000 * multiplication)
+    spec_name = os.listdir(root_dir + "slice_pointsec/")
+    if len(spec_name) == (10/length)* 10 * multiplication: 
+        print ((10/length)* 10 * multiplication)
         print ("checked")
     spec_name.sort()
     
@@ -78,41 +94,47 @@ for p in range(blocks_volume):
     big_pcs = []
     all_index = []
 
-    for i in range(100 * multiplication):
+    for i in range(int(10/length) * multiplication):
         small_pcs = []
         index_record = []
         mix_pcs = []
-
-        for j in range(0 + i, 1000 * multiplication + i, 100 * multiplication):
-            spec = data_process.gen_spectrogram(point_sec_sliced_path + spec_name[i])
+        
+        
+        # generate clean column
+        for j in range(0 + i, int(10/length) * 10 * multiplication + i, int(10/length) * multiplication):
+            spec = data_process.gen_spectrogram(root_dir + 'slice_pointsec/' + spec_name[j])
             small_pcs.append(spec)
 
         # generate mixed column
         mixed = []
         index_record = []
         pc1, pc2 = np.random.choice([0,1,2,3,4,5,6,7,8,9], 2, replace = False)
-
-        mixed_spec = (small_pcs[pc1] * small_pcs[pc2])/ (small_pcs[pc1] + small_pcs[pc2])
+        
+        mixed_spec = (small_pcs[pc1] + small_pcs[pc2])
+        print ("mixed_spec shape =", mixed_spec.shape)
 
         # append mixed spec into small_pcs
-        mix_pcs.append(mixed_spec)
+        small_pcs.append(mixed_spec)
+
+        print ("pc1 = ", pc1, ", pc2 = ", pc2)
+        index_record.append([pc1, pc2])
+
        
         
-        # record index
-        ## turn [pc1, pc2] into one-hot encoding
-        z = np.zeros((10,))
-        z[pc1] = 1
-        z[pc2] = 1
-        print ("pc1 = ", pc1, "pc2 = ", pc2, "\n", "z = " ,z)
-        index_record.append(z)
+#        # record index
+#        ## turn [pc1, pc2] into one-hot encoding
+#        z = np.zeros((10,))
+#        z[pc1] = 1
+#        z[pc2] = 1
+#        print ("pc1 = ", pc1, "pc2 = ", pc2, "\n", "z = " ,z)
+#        index_record.append(z)
         
-        single_row = np.stack(mix_pcs)    
+#        single_row = np.stack(mix_pcs)    
 
-        big_pcs.append(single_row)
+        big_pcs.append(small_pcs)
         all_index.append(index_record)
         
-        if i % 10 == 0:
-            print (i, "row done")
+        print (i, "row done")
 
     big_matrix = np.vstack(big_pcs)
     print ("big_matrix shape = ", big_matrix.shape)
@@ -123,8 +145,10 @@ for p in range(blocks_volume):
     ## x_train = big_matrix --> json
     ## y_train = index_record --> json
     
-    with open(mix_path + "mix" + str(p) + '.json', 'w') as jh:
+    with open(root_dir + "mix/mix" + str(p) + '.json', 'w') as jh:
+        print(root_dir + "mix/mix" + str(p) + '.json')
         json.dump(big_matrix.tolist(), jh)
     
-    with open(label_path + "mix_label" + str(p) + '.json', 'w') as f:
+    with open(root_dir + "mix_labels/mix_label" + str(p) + '.json', 'w') as f:
+        print(root_dir + "mix_labels/mix_label" + str(p) + '.json')
         json.dump(index_matrix.tolist(), f)

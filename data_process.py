@@ -92,7 +92,15 @@ def gen_spectrogram(wav):
     plt.close('all')
     gc.collect()
 
-    return spec
+    freq_wid = 342
+    spec = spec[:freq_wid, :]
+
+    spec_ = spec[:256, :128]
+    mean = np.mean(spec_)
+    spec_ = spec_/ mean
+    spec_[spec_ >= 1] = 1
+
+    return spec_
 
 
 def s_matrix(segment, point_sec_sliced_path, multiplication):
