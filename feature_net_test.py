@@ -14,7 +14,8 @@ import pickle
 import os
 import json
 import numpy as np
-
+import random 
+random.seed(0)
 
 
 #=============================================
@@ -159,11 +160,4 @@ plt.plot(loss_record)
 plt.xlabel('iterations')
 plt.ylabel('loss')
 plt.savefig('loss.png')
-plt.show()
-
-plt.figure(figsize = (20, 10))
-plt.plot(epoch_loss)
-plt.xlabel('iterations')
-plt.ylabel('epoch_loss')
-plt.savefig('epoch_loss')
 plt.show()

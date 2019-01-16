@@ -37,16 +37,6 @@ import data_process
 full_audio_path = '/home/tk/Documents/full_audio/' # full audio will be stored here
 sec10_sliced_path = '/home/tk/Documents/slice_10sec/' # 10 sec sliced will be stored here
 
-## 0.1 sec slicing
-pieces = 0 # controls which 10 sec segments will be processed 0.1 sec slicing 
-		   # pieces = 1 means 0~10, 
-		   # pieces = 2 means 10~20, etc.
-
-point_sec_sliced_path = '/home/tk/Documents/slice_pointsec/' # 0.1 sec slices will be stored here
-
-## generate block
-block_path = '/home/tk/Documents/blocks/'   
-
 #=======================================================================
 # Operations
 ## 10 sec slicing
@@ -57,27 +47,6 @@ if ".DS_Store" in audio_list:
 print ("There are", len(audio_list), "fully concatenated files")
 
 for audio in audio_list:
-    data_process.slice_it(audio, full_audio_path, sec10_sliced_path, length = 10000)
+    os.mkdir(sec10_sliced_path + audio[:-4])
+    data_process.slice_it(audio, full_audio_path, sec10_sliced_path + audio + "/", length = 10000)
     print ('done slicing')
-
-
-## 0.1 sec slicing
-file_name = []
-for i in audio_list:
-    slice_name = i[:-4]
-    file_name.append(slice_name)
-
-# controls sliced segments, 
-# pieces = 1 means 0~10, 
-# pieces = 2 means 10~20, etc.
-
-for file in file_name:
-    for i in range(pieces * 10, (pieces + 1) * 10):
-        name = file + "_{0}.wav".format(i)
-        data_process.slice_it(name, sec10_sliced_path, point_sec_sliced_path, length = 100)
-
-## checkpoint: spec_name should have 10,000 files
-spec_name = os.listdir(point_sec_sliced_path)
-spec_name.sort()
-if len(spec_name) == 10000:
-	print ("10000 checked!")

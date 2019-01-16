@@ -1,48 +1,83 @@
+import numpy as np
+import os
+from data_process import gen_spectrogram
+import json
+
+##======================================
+##               path
+##======================================
 root_dir = '/home/tk/Documents/'
+sliced_pool_path = '/home/tk/Documents/sliced_pool/'
 
-stock = []
-spec0_cluster = []
-spec1_cluster = []
+full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
+              'constructivebeekeeping',
+              'discoursesbiologicalgeological_16_huxley_12', 
+              'natureguide', 'pioneersoftheoldsouth', 
+              'pioneerworkalps_02_harper_12', 
+              'romancecommonplace', 'travelstoriesretold']
 
-for j in range(10):
-    for i in range(100):
-        from data_process import gen_spectrogram
+##======================================
+##               control
+##======================================
 
-        selected_audio = np.random.choice(g, size = 2, replace = False)
+# number of mix blocks
+blocks = 10
 
-        # prevent to select from the same source
-        if selected_audio[0][:8] == selected_audio[1][:8]: 
-            selected_audio = np.random.choice(g, size = 2, replace = False)
-        if r[0][:8] == r[1][:8]:
-            selected_audio = np.random.choice(g, size = 2, replace = False)
-        print (selected_audio)
+for i in range(blocks):
+    all_target_label = []
+    all_target_spec = []
+    all_mix_spec = []
+    
+    for j in range(100):
+        mix_spec = np.zeros((256, 128))
+        cnt = 0
+        
+        all_spec = []
+        all_selected_file = []
 
-        # generate 2 spectrograms & mix
-        gen_path0 = '/home/tk/Documents/sliced_pool/' + selected_audio[0]
-        gen_path1 = '/home/tk/Documents/sliced_pool/' + selected_audio[1]
-        spec0 = gen_spectrogram(gen_path0)
-        spec1 = gen_spectrogram(gen_path1)
-        mixed_spec = spec0 + spec1
+        for name in full_audio:
+            
+            
+            file_name_list = os.listdir(sliced_pool_path + name + '/')
+            file_name = np.random.choice(file_name_list)
+            spec = gen_spectrogram(sliced_pool_path + name + '/' + file_name)
+            
+            print (file_name)
+            
+            all_selected_file.append(file_name)
+            all_spec.append(spec)
+            
+            mix_spec = mix_spec + spec
 
-        # append the mixed spectrograms
-        stock.append(mixed_spec)
-        spec0_cluster.append(spec0)
-        spec1_cluster.append(spec1)
+            cnt+=1
+                
+        target_ind = np.random.choice([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        target_spec = all_spec[target_ind]
+        
+        all_mix_spec.append(mix_spec)
+        all_target_label.append(target_ind)
+        all_target_spec.append(target_spec)
 
-    stock = np.array(stock)
-    print ('mixed_spec shape = ', stock.shape)
+    all_target_label = np.array(all_target_label)
+    all_target_label = np.stack(all_target_label)
+    
+    all_target_apec = np.array(all_target_spec)
+    all_target_spec = np.stack(all_target_spec)
+    
+    all_mix_spec = np.array(all_mix_spec)
+    all_mix_spec = np.stack(all_mix_spec)
+    
+    print("target label shape = ", all_target_label.shape)
+    print("target spec shape = ", all_target_spec.shape)
+    print("mix spec shape = ", all_mix_spec.shape)
+        
 
-    spec0_cluster = np.array(spec0_cluster)
-    print ('spec0 cluster shape = ', spec0_cluster.shape)
 
-    spec1_cluster = np.array(spec1_cluster)
-    print ('spec1 cluster shape = ', spec1_cluster.shape)
+    with open(root_dir + "mix_pool/mix_spec/" + 'mix_spec' + str(i) + '.json', 'w') as jh:
+        json.dump(all_mix_spec.tolist(), jh)
 
-    with open(root_dir + "mix_pool/mix_spec/" + str(j) + '.json', 'w') as jh:
-        json.dump(stock.tolist(), jh)
+    with open(root_dir + "mix_pool/target_spec/" + 'target_spec' + str(i) + '.json', 'w') as jh:
+        json.dump(all_target_spec.tolist(), jh)
 
-    with open(root_dir + "mix_pool/spec0/" + str(j) + '.json', 'w') as jh:
-        json.dump(spec0_cluster.tolist(), jh)
-
-    with open(root_dir + "mix_pool/spec1/" + str(j) + '.json', 'w') as jh:
-        json.dump(spec1_cluster.tolist(), jh)
+    with open(root_dir + "mix_pool/target_label/" 'target_label' + str(i) + '.json', 'w') as jh:
+        json.dump(all_target_label.tolist(), jh)

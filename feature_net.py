@@ -16,7 +16,8 @@ import pickle
 import os
 import json
 import numpy as np
-
+import random
+random.seed(7)
 
 
 #=============================================
@@ -24,13 +25,13 @@ import numpy as np
 #=============================================
 
 epoch = 5
-lr = 0.01
+lr = 0.001
 mom = 0.8
 bs = 10
 
 #======================================
-clean_dir = '/home/tk/Documents/clean/' 
-clean_label_dir = '/home/tk/Documents/clean_labels/' 
+clean_dir = '/home/tk/Documents/clean/second_part/' 
+clean_label_dir = '/home/tk/Documents/clean_labels/second_part/' 
 #========================================
 
 cleanfolder = os.listdir(clean_dir)
@@ -109,7 +110,7 @@ class featureNet(nn.Module):
         return F.log_softmax(x, dim = 1)
     
 model = featureNet()
-#model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
+model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
 print (model)
 
 #============================================

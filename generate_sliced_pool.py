@@ -1,7 +1,7 @@
 # generate 0.5 sec sliced audio from ~/Documents/slice_10sec/
 # take _60~_160 for each file
 # save the sliced file at ~/Documents/sliced_pool/ 
-
+import os
 ##=============================
 ##    define slicing function
 ##=============================
@@ -30,26 +30,38 @@ def slice_it(filename, input_path, output_path, length):
 ##=============================
 ##      full audio name
 ##=============================
-full_audio = ['birdstudybook_', 'captaincook_', 'cloudstudies_02_clayden_12_', 
-              'constructivebeekeeping_',
-              'discoursesbiologicalgeological_16_huxley_12_', 
-              'natureguide_', 'pioneersoftheoldsouth_', 
-              'pioneerworkalps_02_harper_12_', 
-              'romancecommonplace_', 'travelstoriesretold_']
+full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
+              'constructivebeekeeping',
+              'discoursesbiologicalgeological_16_huxley_12', 
+              'natureguide', 'pioneersoftheoldsouth', 
+              'pioneerworkalps_02_harper_12', 
+              'romancecommonplace', 'travelstoriesretold']
+
+full_audio_path = '/home/tk/Documents/full_audio/' # full audio will be stored here
+sec10_sliced_path = '/home/tk/Documents/slice_10sec/' # 10 sec sliced will be stored here
+sliced_pool_path =  '/home/tk/Documents/sliced_pool/'
 
 
 ##=============================
 ##       slicing
 ##=============================
-sliced_list = []
 for name in full_audio:
+    sliced_list = []
+    if (sliced_pool_path + name) == False :
+        os.mkdir(sliced_pool_path + name)
+    
+    
     for i in range(60, 160): # numbers in range() controls which segements to take
-        m = name + str(i) + '.wav'
+        m = name + '_' + str(i) + '.wav'
         sliced_list.append(m)
         del m
         
-for j in sliced_list:
-    slice_it(j, '/home/tk/Documents/slice_10sec/', '/home/tk/Documents/sliced_pool/', 500)
+    for j in sliced_list:
+        slice_it(j, sec10_sliced_path + name + '/', sliced_pool_path + name + '/for_mix/', 500)
+
+        
+#for j in sliced_list:
+#    slice_it(j, '/home/tk/Documents/slice_10sec/' + name, '/home/tk/Documents/sliced_pool/a/', 500)
     
 ##=============================
 # This file will create 1000*20 = 20,000 audio files, 

@@ -23,10 +23,10 @@ import cv2
 #        Hyperparameters
 #=============================================
 
-epoch = 19
+epoch = 10
 lr = 0.001
 mom = 0.9
-bs = 1
+bs = 8
 
 #=============================================
 #        Define Functions
@@ -69,9 +69,11 @@ if server == True:
 
 
 clean_dir = root_dir + 'clean/' 
-mix_dir = root_dir + 'mix/' 
+mix_dir = root_dir + 'mix_pool/mix_spec' 
 clean_label_dir = root_dir + 'clean_labels/' 
 mix_label_dir = root_dir + 'mix_labels/' 
+
+
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
@@ -177,8 +179,8 @@ class featureNet(nn.Module):
         
         return feat, x
 
-# feature_model = featureNet()
-feature_model = torch.load(root_dir + 'FeatureNet.pkl')
+model = featureNet()
+model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
     
 '''ANet'''
 class ANet(nn.Module):
