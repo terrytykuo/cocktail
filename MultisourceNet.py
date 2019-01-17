@@ -634,7 +634,7 @@ for epo in range(epoch):
         outputs = outputs.view(bs, 1, 256, 128)
         
         
-        target = target.view(bs, 1, 256, 128)
+        target = targets.view(bs, 1, 256, 128)
         loss = - criterion(outputs, target)
         ssim_value = - loss.data.item()
 
