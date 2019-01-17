@@ -642,6 +642,7 @@ for epo in range(epoch):
         optimizer.step()
         
         loss_record.append(loss.item())
+        print (i)
     
  
     loss_record.append(loss.item())
@@ -653,15 +654,15 @@ for epo in range(epoch):
     
     inn = inputs.view(256, 128).detach().numpy() * 255
     np.clip(inn, np.min(inn), 1)
-    cv2.imwrite("/home/tk/Documents/recover/combine/" + str(epo)  + "_mix.png", inn)
+    cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_mix.png", inn)
 
     tarr = target.view(256, 128).detach().numpy() * 255
     np.clip(tarr, np.min(tarr), 1)
-    cv2.imwrite("/home/tk/Documents/recover/combine/" + str(epo)  + "_tar.png", tarr)
+    cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_tar.png", tarr)
 
     outt = outputs.view(256, 128).detach().numpy() * 255
     np.clip(outt, np.min(outt), 1)
-    cv2.imwrite("/home/tk/Documents/recover/combine/" + str(epo)  + "_sep.png", outt)
+    cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_sep.png", outt)
 
     
     print ('[%d] loss: %.3f' % (epo, loss.item()))
@@ -677,4 +678,10 @@ for epo in range(epoch):
 #        Save Model & Loss
 #=============================================
 
-# torch.save(model, root_dir + 'recover/combine/combine_SSIM.pkl')
+torch.save(Res_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/res.pkl')
+torch.save(A_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/A.pkl')
+torch.save(featurenet.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/feat.pkl')
+
+
+
+
