@@ -26,7 +26,7 @@ import cv2
 epoch = 10
 lr = 0.001
 mom = 0.9
-bs = 4
+bs = 1
 
 #=============================================
 #        Define Functions
@@ -56,7 +56,6 @@ def white(x):
 
     return second + first
 
-
 #=============================================
 #        path
 #=============================================
@@ -82,11 +81,9 @@ target_label_dir = '/home/tk/Documents/mix_pool/target_label/'
 # mixfolder = os.listdir(mix_dir)
 # mixfolder.sort()
 
-
 #=============================================
 #       Define Datasets
 #=============================================
-
 
 class mixDataSet(Dataset):
     
@@ -101,9 +98,11 @@ class mixDataSet(Dataset):
         
         with open(target_spec_dir + 'target_spec2.json') as f:
             target_spec_list.append(torch.Tensor(json.load(f)))
-        
-        with open(target_label_dir + 'target_label2') as f:
+            
+        with open(target_label_dir + 'target_label2.json') as f:
             target_label_list.append(torch.Tensor(json.load(f)))
+        
+        
 
         mixblock = torch.cat(mix_list, 0)
         targetspec = torch.cat(target_spec_list, 0)
@@ -130,42 +129,42 @@ class featureDataSet(Dataset):
     
     def __init__(self, clean_dir, label):
         
-        audio_name = []
+        full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
+              'constructivebeekeeping',
+              'discoursesbiologicalgeological_16_huxley_12', 
+              'natureguide', 'pioneersoftheoldsouth', 
+              'pioneerworkalps_02_harper_12', 
+              'romancecommonplace', 'travelstoriesretold']
+
         feature_list = []
 
-        with open(clean_dir + audio_name[label] + '/0.json') as f:
+        with open(clean_dir + full_audio[label] + '/0.json') as f:
             feature_list.append(torch.Tensor(json.load(f)))      
         
         featureblock = torch.cat(feature_list, 0)
         
         self.featurespec = featureblock
-        self.label = label
                 
         
     def __len__(self):
         return self.featurespec.shape[0]
 
                 
-    def __getitem__(self, index): 
-
-        featurespec = self.featurespec[index]
+    def __getitem__(self): 
+        
+        featurespec = self.featurespec
         return featurespec
     
 #=============================================
-#        Define Dataloader
+#        Dataloader
 #=============================================
 
 
 mixset = mixDataSet(mix_dir, target_spec_dir, target_label_dir)
-featureset = featureDataSet(clean_dir, label)
-
 mixloader = torch.utils.data.DataLoader(dataset = mixset,
                                         batch_size = bs,
                                         shuffle = False)
 
-featureloader = torch.utils.data.DataLoader(dataset = featureset,
-                                            batch_size = bs,
-                                            shuffle = False)
 
 
 #=============================================
@@ -189,8 +188,8 @@ class featureNet(nn.Module):
         
         return feat, x
 
-model = featureNet()
-model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
+featurenet = featureNet()
+# model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
     
 '''ANet'''
 class ANet(nn.Module):
@@ -198,14 +197,6 @@ class ANet(nn.Module):
     def __init__(self):
         super(ANet, self).__init__()
 
-        self.linear7 = nn.Sequential(
-            nn.Linear(256, 512),
-            nn.ReLU(),
-        )
-        self.linear6 = nn.Sequential(
-            nn.Linear(256, 256),
-            nn.ReLU(),
-        )
         self.linear5 = nn.Sequential(
             nn.Linear(256, 128),
             nn.ReLU(),
@@ -226,16 +217,15 @@ class ANet(nn.Module):
     def forward(self, x):
         x = x.view(bs, 1, 256)
 
-        a7 = self.linear7(x).view(bs, 512, 1, 1)
-        a6 = self.linear6(x).view(bs, 256, 1, 1)
         a5 = self.linear5(x).view(bs, 128, 1, 1)
         a4 = self.linear4(x).view(bs, 64, 1, 1)
         a3 = self.linear3(x).view(bs, 32, 1, 1)
         a2 = self.linear2(x).view(bs, 16, 1, 1)
 
-        return a7, a6, a5, a4, a3, a2
+        return a5, a4, a3, a2
 
 A_model = ANet()
+# A_model = torch.load(root_dir + 'cocktail/anet_2.pickle')
 
 
 ''' ResBlock '''
@@ -313,7 +303,7 @@ class ResDAE(nn.Module):
     def __init__(self):
         super(ResDAE, self).__init__()
 
-        # 256x128x1
+        # 1x256x128
         self.upward_net1 = nn.Sequential(
             ResBlock(1, 8),
             ResBlock(8, 8),
@@ -321,7 +311,7 @@ class ResDAE(nn.Module):
             nn.BatchNorm2d(8),
         )
 
-        # 128x64x8
+        # 8x256x128
         self.upward_net2 = nn.Sequential(
             nn.Conv2d(in_channels=8, out_channels=16, kernel_size=(2,2), stride=2),
             nn.ReLU(),
@@ -330,7 +320,7 @@ class ResDAE(nn.Module):
             ResBlock(16, 16),
             nn.BatchNorm2d(16),
         )
-        # 64x32x16
+        # 16x128x64
         self.upward_net3 = nn.Sequential(
             nn.Conv2d(in_channels=16, out_channels=32, kernel_size=(2,2), stride=2),
             nn.ReLU(),
@@ -340,7 +330,7 @@ class ResDAE(nn.Module):
             ResBlock(32, 32),
             nn.BatchNorm2d(32),
         )
-        # 32x16x32
+        # 32x64x32
         self.upward_net4 = nn.Sequential(
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(2,2), stride=2),
             nn.ReLU(),
@@ -350,7 +340,7 @@ class ResDAE(nn.Module):
             ResBlock(64, 64),
             nn.BatchNorm2d(64),
         )
-        # 16x8x64
+        # 64x32x16
         self.upward_net5 = nn.Sequential(
             nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(2,2), stride=2),
             nn.ReLU(),
@@ -360,13 +350,13 @@ class ResDAE(nn.Module):
             ResBlock(64, 64),
             nn.BatchNorm2d(64),
         )
-        # 8x4x64
+        # 64x16x8
 
-        self.linear1 = nn.Linear(2048, 512)
+        self.linear1 = nn.Linear(8192, 512)
 
-        self.linear2 = nn.Linear(512, 2048)
+        self.linear2 = nn.Linear(512, 8192)
 
-        # 8x4x64
+        # 64x16x8
         self.uconv5 = nn.Conv2d(64, 64, kernel_size=(3,3), padding=(1,1))
         self.downward_net5 = nn.Sequential(
             ResBlock(64, 64),
@@ -377,7 +367,7 @@ class ResDAE(nn.Module):
             nn.BatchNorm2d(64),
         )
 
-        # 16x8x64
+        # 64x32x16
         self.uconv4 = nn.Conv2d(64, 64, kernel_size=(3,3), padding=(1,1))
         self.downward_net4 = nn.Sequential(
             ResBlock(64, 64),
@@ -388,7 +378,7 @@ class ResDAE(nn.Module):
             nn.BatchNorm2d(32),
         )
 
-        # 32x16x32
+        # 32x64x32
         self.uconv3 = nn.Conv2d(32, 32, kernel_size=(3,3), padding=(1,1))
         self.downward_net3 = nn.Sequential(
             ResBlock(32, 32),
@@ -399,7 +389,7 @@ class ResDAE(nn.Module):
             nn.BatchNorm2d(16),
         )
 
-        # 64x32x16
+        # 16x128x64
         self.uconv2 = nn.Conv2d(16, 16, kernel_size=(3,3), padding=(1,1))
         self.downward_net2 = nn.Sequential(
             ResBlock(16, 16),
@@ -409,7 +399,7 @@ class ResDAE(nn.Module):
             nn.BatchNorm2d(8),
         )
 
-        # 128x64x8
+        # 8x256x128
         self.uconv1 = nn.Conv2d(8, 8, kernel_size=(3,3), padding=(1,1))
         self.downward_net1 = nn.Sequential(
             ResBlock(8, 8),
@@ -419,31 +409,37 @@ class ResDAE(nn.Module):
             ResTranspose(1, 1),
             nn.BatchNorm2d(1),
         )
-        # 256x128x1
+        # 1x256x128
 
     def upward(self, x, a5=None, a4=None, a3=None, a2=None, a1=None):
         x = x.view(bs, 1, 256, 128)
-
+        
+        print (x.shape)
         x = self.upward_net1(x)
         self.x1 = x
 
+        print (x.shape)
         x = self.upward_net2(x)         # 8x64x64
         if a1 is not None: x = x * a1   
         self.x2 = x
-        
+ 
+        print (x.shape)
         x = self.upward_net3(x)         # 16x32x32
         if a2 is not None: x = x * a2
         self.x3 = x
-        
+
+        print (x.shape)
         x = self.upward_net4(x)         # 32x16x16
         if a3 is not None: x = x * a3
         self.x4 = x
-        
+
+        print (x.shape)
         x = self.upward_net5(x)         # 64x8x8
         if a4 is not None: x = x * a4
         self.x5 = x
 
-        x = x.view(bs, 1, 2048)
+        print (x.shape)
+        x = x.view(bs, 1, 8192)
         x = F.relu(self.linear1(x))
         if a5 is not None: x = x * a5
 
@@ -456,8 +452,8 @@ class ResDAE(nn.Module):
 
 
         y = F.relu(self.linear2(y))
-        y = y.view(bs, 8, 4, 64)
-
+        y = y.view(bs, 64, 16, 8)
+        print (y.shape)
         if shortcut:
             y = torch.cat((y, self.x5), 1)
             y = F.relu(self.uconv5(y))
@@ -488,7 +484,7 @@ class ResDAE(nn.Module):
 
 
 Res_model = ResDAE()
-Res_model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
+# Res_model = torch.load(root_dir + 'cocktail/dae_2.pickle')
 # print (model)
 
 #=============================================
@@ -520,14 +516,14 @@ for epo in range(epoch):
         mix_spec, target_spec, target_label = data
         inputs = Variable(mix_spec)
         targets = target_spec
-
         
         optimizer.zero_grad()
         
         # get feature
-        featurespec = featurloader(target_label)
-        feat = feature_model(featurespec) # feed in clean spectrogram to extract feature
-        
+        featureset = featureDataSet(clean_dir, int(target_label))
+        feat_data = featureset.__getitem__()[2]  
+        feat, _ = featurenet(feat_data) 
+
         # feed in feature to ANet
         att = A_model(feat)
         
