@@ -660,21 +660,21 @@ for epo in range(epoch):
     
     
 
-        if i % 20 == 0:
+        if i % 100 == 0:
 
             print ('[%d, %2d] loss: %.3f' % (epo, i, loss.item()))
 
             inn = inputs.view(256, 128).detach().numpy() * 255
             np.clip(inn, np.min(inn), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/' + str(i)  + "_mix.png", inn)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/' + str(epo) + '_' + str(i)  + "_mix.png", inn)
 
             tarr = target.view(256, 128).detach().numpy() * 255
             np.clip(tarr, np.min(tarr), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/' + str(i)  + "_tar.png", tarr)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/' + str(epo) + '_' + str(i)  + "_tar.png", tarr)
 
             outt = outputs.view(256, 128).detach().numpy() * 255
             np.clip(outt, np.min(outt), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/' + str(i)  + "_sep.png", outt)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/' + str(epo) + '_' + str(i)  + "_sep.png", outt)
 
     
     loss_record.append(loss.item())

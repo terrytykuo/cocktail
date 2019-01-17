@@ -105,7 +105,7 @@ class mixDataSet(Dataset):
         for na in os.listdir(target_spec_dir):
             with open(target_spec_dir + '{}'.format(na)) as f:
                 target_spec_list.append(torch.Tensor(json.load(f)))
-                
+
         for na in os.listdir(target_label_dir):
             with open(target_label_dir + '{}'.format(na)) as f:
                 target_label_list.append(torch.Tensor(json.load(f)))
@@ -659,21 +659,21 @@ for epo in range(epoch):
     
     
 
-        if i % 20 == 0:
+        if i % 100 == 0:
 
             print ('[%d, %2d] loss: %.3f' % (epo, i, loss.item()))
 
             inn = inputs.view(256, 128).detach().numpy() * 255
             np.clip(inn, np.min(inn), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1/' + str(i)  + "_mix.png", inn)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1/' + '_' + str(epo) + str(i)  + "_mix.png", inn)
 
             tarr = target.view(256, 128).detach().numpy() * 255
             np.clip(tarr, np.min(tarr), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1/' + str(i)  + "_tar.png", tarr)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1/' + '_' + str(epo) + str(i)  + "_tar.png", tarr)
 
             outt = outputs.view(256, 128).detach().numpy() * 255
             np.clip(outt, np.min(outt), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1/' + str(i)  + "_sep.png", outt)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1/' + '_' + str(epo) + str(i)  + "_sep.png", outt)
 
     
     loss_record.append(loss.item())
