@@ -111,6 +111,8 @@ class mixDataSet(Dataset):
         
         mixblock = torch.cat(mix_list, 0)
         targetblock = torch.cat(target_spec_list, 0)
+        targetlabel = torch.cat(target_label_list, 0)
+
         
 
         self.mix_spec = mixblock
