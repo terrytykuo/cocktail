@@ -598,6 +598,7 @@ Res_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/
 
 #import pytorch_ssim
 criterion = pytorch_ssim.SSIM()
+criterion1 = nn.MSELoss()
 optimizer = torch.optim.Adam(Res_model.parameters(), lr = lr) #, momentum = mom)
 
 #=============================================
@@ -639,7 +640,7 @@ for epo in range(epoch):
         
         
         target = targets.view(bs, 1, 256, 128)
-        loss = - criterion(outputs, target)
+        loss = - criterion(outputs, target) + criterion1(outputs, target)
         ssim_value = - loss.data.item()
 
         loss.backward()
