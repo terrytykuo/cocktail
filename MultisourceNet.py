@@ -26,7 +26,7 @@ import cv2
 epoch = 10
 lr = 0.001
 mom = 0.9
-bs = 8
+bs = 1
 
 #=============================================
 #        Define Functions
@@ -69,11 +69,9 @@ if server == True:
 
 
 clean_dir = root_dir + 'clean/' 
-mix_dir = root_dir + 'mix_pool/mix_spec' 
-clean_label_dir = root_dir + 'clean_labels/' 
-mix_label_dir = root_dir + 'mix_labels/' 
-
-
+mix_dir = root_dir + 'mix_pool/mix_spec/' # 10-people mix
+target_spec_dir = root_dir + 'mix_pool/target_spec/' 
+target_label_dir = root_dir + 'mix_pool/target_label/'
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
@@ -94,41 +92,63 @@ feature_list = []
 
 class mixDataSet(Dataset):
     
-    def __init__(self, mix_dir, mix_label_dir):           
+    def __init__(self, mix_dir, target_spec_dir, target_label_dir):           
         
-        with open(mix_dir + 'mix2.json') as f:
+        mix_list = []
+        target_spec_list = []
+        target_label_list = []
+
+
+        with open(mix_dir + 'mix_spec2.json') as f:
             mix_list.append(torch.Tensor(json.load(f)))
-        
-        with open(mix_label_dir + 'mix_label2.json') as f:
-            mix_label_list.append(torch.Tensor(json.load(f)))
+
+        with open(target_spec_dir + 'target_spec2.json') as f:
+            target_spec_list.append(torch.Tensor(json.load(f)))
+
+        with open(target_label_dir + 'target_label2.json') as f:
+            target_label_list.append(torch.Tensor(json.load(f)))
+
         
         mixblock = torch.cat(mix_list, 0)
-        mixlabel = torch.cat(mix_label_list, 0)
+        targetblock = torch.cat(target_spec_list, 0)
         
+
         self.mix_spec = mixblock
-        self.mix_label = mixlabel
+        self.target_spec = targetblock
+        self.target_label = targetlabel
+
                 
         
     def __len__(self):
         return self.mix_spec.shape[0]
 
 
-    def __getitem__(self, spec_index, label_index): 
+    def __getitem__(self, index): 
 
-        mix_spec = self.mix_spec[spec_index]
-        mix_label = self.mix_label[label_index]
-        return mix_spec, mix_label
+        mix_spec = self.mix_spec[index]
+        target_spec = self.target_spec[index]
+        target_label = self.target_label[index]
+        return mix_spec, target_spec, target_label
 
 
 class featureDataSet(Dataset):
     
-    def __init__(self, clean_dir):
+    def __init__(self, clean_dir, label):
         
+        full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
+              'constructivebeekeeping',
+              'discoursesbiologicalgeological_16_huxley_12', 
+              'natureguide', 'pioneersoftheoldsouth', 
+              'pioneerworkalps_02_harper_12', 
+              'romancecommonplace', 'travelstoriesretold']
 
-        with open(clean_dir + 'clean15.json') as f:
+        feature_list = []
+
+        with open(clean_dir + full_audio[label] + '/0.json') as f:
             feature_list.append(torch.Tensor(json.load(f)))      
         
         featureblock = torch.cat(feature_list, 0)
+        
         self.featurespec = featureblock
                 
         
@@ -136,9 +156,9 @@ class featureDataSet(Dataset):
         return self.featurespec.shape[0]
 
                 
-    def __getitem__(self, index): 
-
-        featurespec = self.featurespec[index]
+    def __getitem__(self): 
+        
+        featurespec = self.featurespec
         return featurespec
     
 #=============================================
@@ -147,16 +167,10 @@ class featureDataSet(Dataset):
 
 
 mixset = mixDataSet(mix_dir, mix_label_dir)
-featureset = featureDataSet(clean_dir)
 
-# mixloader = torch.utils.data.DataLoader(dataset = mixset,
-#                                               batch_size = bs,
-#                                               shuffle = False)
-
-# featureloader = torch.utils.data.DataLoader(dataset = featureset,
-#                                          batch_size = bs,
-#                                          shuffle = False)
-
+mixloader = torch.utils.data.DataLoader(dataset = mixset,
+    batch_size = bs,
+    shuffle = False)
 
 #=============================================
 #        Model
@@ -560,7 +574,7 @@ class ResDAE(nn.Module):
         # 1x256x128
         return y
 
-# Res_model = ResDAE()
+Res_model = ResDAE()
 Res_model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
 # print (model)
 
@@ -587,36 +601,39 @@ loss_record = []
 
 Res_model.train()
 for epo in range(epoch):
+    for i, data in enumerate(mixloader, 0):
     
-    # get mix spec & label
-    mix_spec, mix_label = mixset.__getitem__(spec_index = epo*11 + 10, label_index = epo) 
-    inputs = Variable(mix_spec)
-    
-    optimizer.zero_grad()
-    
-    # get feature
-    print ("mix_label = ", mix_label[0]) # the assigned attended sound source
-    featurespec = featureset.__getitem__(int(mix_label[0]) * 20) # go to cleanblock to grab clean source, and extract the feature
-    feat, _ = feature_model(featurespec) # feed in clean spectrogram to extract feature
-    
-    # feed in feature to ANet
-    att = A_model(feat)
-    
-    # Res_model
-    top = Res_model.upward(inputs) #+ white(inputs))
-    outputs = Res_model.downward(top, shortcut = True)
-    outputs = outputs.view(bs, 1, 256, 128)
-    
-    
-    target, _ = mixset.__getitem__(spec_index = epo * 11 + int(mix_label[0]), label_index = 0) # don't need label_index here, it can be random
-    target = target.view(bs, 1, 256, 128)
-    loss = - criterion(outputs, target)
-    ssim_value = - loss.data.item()
-    loss.backward()
-    optimizer.step()
-    
-    
+        # get mix spec & label
+        mix_spec, target_spec, target_label = data
+        inputs = Variable(mix_spec)
+        targets = target_spec
+        
+        optimizer.zero_grad()
+        
+        # get feature
+        featureset = featureDataSet(clean_dir, int(target_label))
+        feat_data = featureset.__getitem__()[2]  
+        feat, _ = featurenet(feat_data) 
 
+        # feed in feature to ANet
+        att = A_model(feat)
+        
+        # Res_model
+        top = Res_model.upward(inputs) #+ white(inputs))
+        outputs = Res_model.downward(top, shortcut = True)
+        outputs = outputs.view(bs, 1, 256, 128)
+        
+        
+        target = target.view(bs, 1, 256, 128)
+        loss = - criterion(outputs, target)
+        ssim_value = - loss.data.item()
+
+        loss.backward()
+        optimizer.step()
+        
+        loss_record.append(loss.item())
+    
+ 
     loss_record.append(loss.item())
     plt.figure(figsize = (20, 10))
     plt.plot(loss_record)
