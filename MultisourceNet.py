@@ -166,7 +166,7 @@ class featureDataSet(Dataset):
 #=============================================
 
 
-mixset = mixDataSet(mix_dir, mix_label_dir)
+mixset = mixDataSet( mix_dir, target_spec_dir, target_label_dir)
 
 mixloader = torch.utils.data.DataLoader(dataset = mixset,
     batch_size = bs,
