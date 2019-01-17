@@ -597,7 +597,8 @@ Res_model = torch.load(root_dir + 'DAE_SSIM.pkl')
 #=============================================
 
 #import pytorch_ssim
-criterion = nn.MSELoss()
+criterion1 = nn.L1Loss()
+criterion2 = pytorch_ssim.SSIM()
 optimizer = torch.optim.SGD(Res_model.parameters(), lr = lr, momentum = mom)
 optimizer_A = torch.optim.SGD(A_model.parameters(), lr = lr, momentum = mom)
 
@@ -644,7 +645,7 @@ for epo in range(epoch):
         
         
         target = targets.view(bs, 1, 256, 128)
-        loss = criterion(outputs, target)
+        loss = criterion1(outputs, target) + (- criterion2(outputs, target))
 
         loss.backward()
         optimizer.step()
@@ -663,15 +664,15 @@ for epo in range(epoch):
 
             inn = inputs.view(256, 128).detach().numpy() * 255
             np.clip(inn, np.min(inn), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/' + str(i)  + "_mix.png", inn)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/' + str(i)  + "_mix.png", inn)
 
             tarr = target.view(256, 128).detach().numpy() * 255
             np.clip(tarr, np.min(tarr), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/' + str(i)  + "_tar.png", tarr)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/' + str(i)  + "_tar.png", tarr)
 
             outt = outputs.view(256, 128).detach().numpy() * 255
             np.clip(outt, np.min(outt), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/' + str(i)  + "_sep.png", outt)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/' + str(i)  + "_sep.png", outt)
 
     
     loss_record.append(loss.item())
@@ -679,7 +680,7 @@ for epo in range(epoch):
     plt.plot(loss_record)
     plt.xlabel('iterations')
     plt.ylabel('loss')
-    plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/L2')
+    plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/')
     
     print ('[%d] loss: %.3f' % (epo, loss.item()))
 #            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
@@ -694,9 +695,9 @@ for epo in range(epoch):
 #        Save Model & Loss
 #=============================================
 
-torch.save(Res_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/res.pkl')
-torch.save(A_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/A.pkl')
-torch.save(featurenet.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/feat.pkl')
+torch.save(Res_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/res.pkl')
+torch.save(A_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/A.pkl')
+torch.save(featurenet.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L1+SSIM/feat.pkl')
 
 
 
