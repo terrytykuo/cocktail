@@ -598,7 +598,7 @@ Res_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/
 
 #import pytorch_ssim
 criterion = nn.MSELoss()
-optimizer = torch.optim.SGD(Res_model.parameters() lr = lr, momentum = mom)
+optimizer = torch.optim.SGD(Res_model.parameters(), lr = lr, momentum = mom)
 optimizer_A = torch.optim.SGD(A_model.parameters(), lr = lr, momentum = mom)
 
 
