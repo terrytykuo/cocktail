@@ -98,7 +98,7 @@ class mixDataSet(Dataset):
         target_spec_list = []
         target_label_list = []
 
-        for na in listos.listdir(mix_dir):
+        for na in os.listdir(mix_dir):
             with open(mix_dir + '{}'.format(na)) as f:
                 mix_list.append(torch.Tensor(json.load(f)))
 
