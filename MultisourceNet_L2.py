@@ -644,7 +644,7 @@ for epo in range(epoch):
         
         
         target = targets.view(bs, 1, 256, 128)
-        loss = criterion1(outputs, target)
+        loss = criterion(outputs, target)
 
         loss.backward()
         optimizer.step()
