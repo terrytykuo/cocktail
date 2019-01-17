@@ -597,9 +597,10 @@ Res_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/
 #=============================================
 
 #import pytorch_ssim
-criterion = pytorch_ssim.SSIM()
-criterion1 = nn.MSELoss()
-optimizer = torch.optim.SGD(Res_model.parameters(), A_model.parameters(), lr = lr, momentum = mom)
+criterion = nn.MSELoss()
+optimizer = torch.optim.SGD(Res_model.parameters() lr = lr, momentum = mom)
+optimizer_A = torch.optim.SGD(A_model.parameters(), lr = lr, momentum = mom)
+
 
 #=============================================
 #        Loss Record
@@ -625,6 +626,8 @@ for epo in range(epoch):
         targets = target_spec
         
         optimizer.zero_grad()
+        optimizer_A.zero_grad()
+
         
         # get feature
         featureset = featureDataSet(clean_dir, int(target_label))
@@ -645,6 +648,8 @@ for epo in range(epoch):
 
         loss.backward()
         optimizer.step()
+        optimizer_A.step()
+
         
         loss_record.append(loss.item())
         print (i)
