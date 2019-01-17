@@ -655,7 +655,7 @@ for epo in range(epoch):
     plt.plot(loss_record)
     plt.xlabel('iterations')
     plt.ylabel('loss')
-    plt.savefig(root_dir + 'recover/combine/DAE_loss.png')
+    plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/')
     
     inn = inputs.view(256, 128).detach().numpy() * 255
     np.clip(inn, np.min(inn), 1)
