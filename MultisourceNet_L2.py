@@ -250,7 +250,7 @@ class ANet(nn.Module):
         return a7, a6, a5, a4, a3, a2
 
 A_model = ANet()
-A_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/A.pkl'))
+# A_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/A.pkl'))
 
 
 ''' ResBlock '''
