@@ -203,8 +203,8 @@ class featureNet(nn.Module):
         
         return feat, F.log_softmax(x, dim = 1)
     
-model = featureNet()
-model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
+featurenet = featureNet()
+featurenet.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
     
 '''ANet'''
 class ANet(nn.Module):
