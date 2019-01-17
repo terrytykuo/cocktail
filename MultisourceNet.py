@@ -617,6 +617,7 @@ loss_record = []
 Res_model.train()
 for epo in range(epoch):
     for i, data in enumerate(mixloader, 0):
+
     
         # get mix spec & label
         mix_spec, target_spec, target_label = data
@@ -649,26 +650,32 @@ for epo in range(epoch):
         loss_record.append(loss.item())
         print (i)
     
- 
+    
+    
+
+        if i % 20 == 0:
+
+            print ('[%d, %2d] loss: %.3f' % (epo, i, loss.item()))
+
+            inn = inputs.view(256, 128).detach().numpy() * 255
+            np.clip(inn, np.min(inn), 1)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_mix.png", inn)
+
+            tarr = target.view(256, 128).detach().numpy() * 255
+            np.clip(tarr, np.min(tarr), 1)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_tar.png", tarr)
+
+            outt = outputs.view(256, 128).detach().numpy() * 255
+            np.clip(outt, np.min(outt), 1)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_sep.png", outt)
+
+    
     loss_record.append(loss.item())
     plt.figure(figsize = (20, 10))
     plt.plot(loss_record)
     plt.xlabel('iterations')
     plt.ylabel('loss')
     plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/')
-    
-    inn = inputs.view(256, 128).detach().numpy() * 255
-    np.clip(inn, np.min(inn), 1)
-    cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_mix.png", inn)
-
-    tarr = target.view(256, 128).detach().numpy() * 255
-    np.clip(tarr, np.min(tarr), 1)
-    cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_tar.png", tarr)
-
-    outt = outputs.view(256, 128).detach().numpy() * 255
-    np.clip(outt, np.min(outt), 1)
-    cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_sep.png", outt)
-
     
     print ('[%d] loss: %.3f' % (epo, loss.item()))
 #            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
