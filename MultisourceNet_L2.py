@@ -204,7 +204,7 @@ class featureNet(nn.Module):
         return feat, F.log_softmax(x, dim = 1)
     
 featurenet = featureNet()
-featurenet.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/feat.pkl'))
+featurenet.load_state_dict(torch.load(root_dir + 'FeatureNet.pkl'))
     
 '''ANet'''
 class ANet(nn.Module):
@@ -586,8 +586,8 @@ class ResDAE(nn.Module):
         return y
 
 Res_model = ResDAE()
-#Res_model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
-Res_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/res.pkl'))
+Res_model = torch.load(root_dir + 'DAE_SSIM.pkl')
+# Res_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/res.pkl'))
 
 
 # print (model)
