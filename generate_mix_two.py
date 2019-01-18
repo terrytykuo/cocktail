@@ -72,7 +72,7 @@ for i in range(10):
     with open(root_dir + "mix_pool/two_mix_spec/mix_spec/mix_spec" + str(i) + '.json', 'w') as jh:
         json.dump(mix_spec.tolist(), jh)
 
-    with open(root_dir + "mix_pool/two_mix_spec/tatget_spec/tatget_spec" + str(i) + '.json', 'w') as jh:
+    with open(root_dir + "mix_pool/two_mix_spec/target_spec/target_spec" + str(i) + '.json', 'w') as jh:
         json.dump(spec0_cluster.tolist(), jh)
 
     with open(root_dir + "mix_pool/two_mix_spec/label/label" + str(i) + '.json', 'w') as jh:
