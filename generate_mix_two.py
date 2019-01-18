@@ -28,14 +28,12 @@ for i in range(10):
             size = 2, replace = False)
 
         # generate spectrograms 
-        spec_file = np.random.choice(os.listdir(sliced_pool_path + full_audio[int(ind[0])] + '/for_mix/'))
-        print (spec_file)
-        spec0 = gen_spectrogram(sliced_pool_path + full_audio[int(ind[0])] + '/for_mix/' + spec_file)
+        spec_file0 = np.random.choice(os.listdir(sliced_pool_path + full_audio[int(ind[0])] + '/for_mix/'))
+        spec0 = gen_spectrogram(sliced_pool_path + full_audio[int(ind[0])] + '/for_mix/' + spec_file0)
 
-        spec_file = np.random.choice(os.listdir(sliced_pool_path + full_audio[int(ind[1])] + '/for_mix/'))
-        print (spec_file)
-        spec1 = gen_spectrogram(sliced_pool_path + full_audio[int(ind[1])] + '/for_mix/' + spec_file)
-
+        spec_file1 = np.random.choice(os.listdir(sliced_pool_path + full_audio[int(ind[1])] + '/for_mix/'))
+        spec1 = gen_spectrogram(sliced_pool_path + full_audio[int(ind[1])] + '/for_mix/' + spec_file1)
+        print ('spec0 = ', spec_file0, 'spec1 = ', spec_file1)
         # generate mix_spectrograms
         mixed_spec = spec0 + spec1
 
