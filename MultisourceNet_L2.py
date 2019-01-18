@@ -666,7 +666,7 @@ for epo in range(epoch):
             plt.plot(loss_record)
             plt.xlabel('iterations')
             plt.ylabel('loss')
-            plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/L2/')
+            plt.savefig('loss_L2.png')
             
 #            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
    
