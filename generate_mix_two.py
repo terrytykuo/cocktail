@@ -1,6 +1,6 @@
 from data_process import gen_spectrogram
 import numpy as np
-
+import os
 
 
 root_dir = '/home/tk/Documents/'
@@ -28,11 +28,11 @@ for i in range(10):
             size = 2, replace = False)
 
         # generate spectrograms 
-        spec_file = np.random.choice(sliced_pool_path + full_audio[int(ind[0])] + '/')
+        spec_file = np.random.choice(os.listd(sliced_pool_path + full_audio[int(ind[0])] + '/'))
         spec0 = gen_spectrogram(sliced_pool_path + full_audio[int(ind[0])] + '/' + spec_file)
         print (spec_file)
 
-        spec_file = np.random.choice(sliced_pool_path + full_audio[int(ind[1])] + '/')
+        spec_file = np.random.choice(os.listd(sliced_pool_path + full_audio[int(ind[1])] + '/'))
         spec1 = gen_spectrogram(sliced_pool_path + full_audio[int(ind[1])] + '/' + spec_file)
         print (spec_file)
 
