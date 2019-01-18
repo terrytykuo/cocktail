@@ -73,13 +73,6 @@ mix_dir = root_dir + 'mix_pool/mix_spec/' # 10-people mix
 target_spec_dir = root_dir + 'mix_pool/target_spec/' 
 target_label_dir = root_dir + 'mix_pool/target_label/'
 
-cleanfolder = os.listdir(clean_dir)
-cleanfolder.sort()
-
-mixfolder = os.listdir(mix_dir)
-mixfolder.sort()
-
-
 #=============================================
 #       Define Datasets
 #=============================================
@@ -149,6 +142,7 @@ class featureDataSet(Dataset):
         featureblock = torch.cat(feature_list, 0)
         
         self.featurespec = featureblock
+        self.label = label
                 
         
     def __len__(self):
@@ -157,8 +151,9 @@ class featureDataSet(Dataset):
                 
     def __getitem__(self): 
         
-        featurespec = self.featurespec
-        return featurespec
+        index = int(self.label)
+        featurespec = self.featurespec[index]
+        return featurespec, index
     
 #=============================================
 #        Define Dataloader
@@ -628,8 +623,8 @@ for epo in range(epoch):
         
         # get feature
         featureset = featureDataSet(clean_dir, int(target_label))
-        feat_data = featureset.__getitem__()[int(target_label)]  
-        print ("Get feature:", full_audio[int(target_label)])
+        feat_data, index = featureset.__getitem__()  
+        print ("Get feature:", index, full_audio[index])
         feat, _ = featurenet(feat_data) 
 
         # feed in feature to ANet
