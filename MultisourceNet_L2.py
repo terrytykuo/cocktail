@@ -80,11 +80,6 @@ mixfolder = os.listdir(mix_dir)
 mixfolder.sort()
 
 
-clean_list = []
-mix_list = []
-mix_label_list = []
-feature_list = []
-
 #=============================================
 #       Define Datasets
 #=============================================
@@ -634,6 +629,7 @@ for epo in range(epoch):
         # get feature
         featureset = featureDataSet(clean_dir, int(target_label))
         feat_data = featureset.__getitem__()[int(target_label)]  
+        print ("Get feature:", full_audio[int(target_label)])
         feat, _ = featurenet(feat_data) 
 
         # feed in feature to ANet
