@@ -73,11 +73,12 @@ mix_dir = root_dir + 'mix_pool/mix_spec/' # 10-people mix
 target_spec_dir = root_dir + 'mix_pool/target_spec/' 
 target_label_dir = root_dir + 'mix_pool/target_label/'
 
-cleanfolder = os.listdir(clean_dir)
-cleanfolder.sort()
-
-mixfolder = os.listdir(mix_dir)
-mixfolder.sort()
+full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
+      'constructivebeekeeping',
+      'discoursesbiologicalgeological_16_huxley_12', 
+      'natureguide', 'pioneersoftheoldsouth', 
+      'pioneerworkalps_02_harper_12', 
+      'romancecommonplace', 'travelstoriesretold']  
 
 #=============================================
 #       Define Datasets
@@ -133,13 +134,6 @@ class featureDataSet(Dataset):
     
     def __init__(self, clean_dir, label):
         
-        full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
-              'constructivebeekeeping',
-              'discoursesbiologicalgeological_16_huxley_12', 
-              'natureguide', 'pioneersoftheoldsouth', 
-              'pioneerworkalps_02_harper_12', 
-              'romancecommonplace', 'travelstoriesretold']
-
         feature_list = []
 
         with open(clean_dir + full_audio[label] + '/0.json') as f:
@@ -148,6 +142,7 @@ class featureDataSet(Dataset):
         featureblock = torch.cat(feature_list, 0)
         
         self.featurespec = featureblock
+        self.label = label
                 
         
     def __len__(self):
@@ -155,7 +150,7 @@ class featureDataSet(Dataset):
 
                 
     def __getitem__(self): 
-                
+        
         index = int(self.label)
         featurespec = self.featurespec[index]
         return featurespec, index
