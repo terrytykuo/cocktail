@@ -1,7 +1,11 @@
 from data_process import gen_spectrogram
 import numpy as np
 import os
+import json
 
+#===================================
+#           path
+#===================================
 
 root_dir = '/home/tk/Documents/'
 sliced_pool_path = '/home/tk/Documents/sliced_pool/'
@@ -15,8 +19,15 @@ male_audio = ['constructivebeekeeping', 'pioneersoftheoldsouth',
 
 full_audio = male_audio + female_audio
 
-selection_space = male_audio
+#===================================
+#            toggle
+#===================================
 
+selection_space = full_audio
+
+#===================================
+#            process
+#===================================
 mix_spec = []
 spec0_cluster = []
 spec1_cluster = []
