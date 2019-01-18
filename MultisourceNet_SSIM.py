@@ -78,9 +78,7 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
       'discoursesbiologicalgeological_16_huxley_12', 
       'natureguide', 'pioneersoftheoldsouth', 
       'pioneerworkalps_02_harper_12', 
-      'romancecommonplace', 'travelstoriesretold']
-
-
+      'romancecommonplace', 'travelstoriesretold']  
 
 #=============================================
 #       Define Datasets
@@ -156,7 +154,7 @@ class featureDataSet(Dataset):
         index = int(self.label)
         featurespec = self.featurespec[index]
         return featurespec, index
-    
+      
 #=============================================
 #        Define Dataloader
 #=============================================
@@ -591,7 +589,7 @@ Res_model = torch.load(root_dir + 'DAE_SSIM.pkl')
 #=============================================
 
 #import pytorch_ssim
-criterion = nn.MSELoss()
+criterion = pytorch_ssim.SSIM()
 optimizer = torch.optim.SGD(Res_model.parameters(), lr = lr, momentum = mom)
 optimizer_A = torch.optim.SGD(A_model.parameters(), lr = lr, momentum = mom)
 
@@ -626,6 +624,7 @@ for epo in range(epoch):
         # get feature
         featureset = featureDataSet(clean_dir, int(target_label))
         feat_data, index = featureset.__getitem__()  
+        print ("Get feature:", index, full_audio[index])
         feat, _ = featurenet(feat_data) 
 
         # feed in feature to ANet
@@ -638,7 +637,7 @@ for epo in range(epoch):
         
         
         target = targets.view(bs, 1, 256, 128)
-        loss = criterion(outputs, target)
+        loss = - criterion(outputs, target)
 
         loss.backward()
         optimizer.step()
@@ -648,27 +647,28 @@ for epo in range(epoch):
         loss_record.append(loss.item())
         print ('[%d, %2d] loss: %.3f' % (epo, i, loss.item()))
     
+    
+    
+
         if i % 100 == 0:
 
             inn = inputs.view(256, 128).detach().numpy() * 255
             np.clip(inn, np.min(inn), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/' + str(epo) +'_'+ str(i)  + "_mix.png", inn)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/SSIM/' + str(epo) + '_' + str(i)  + "_mix.png", inn)
 
             tarr = target.view(256, 128).detach().numpy() * 255
             np.clip(tarr, np.min(tarr), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/' + str(epo) +'_'+ str(i)  + "_tar.png", tarr)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/SSIM/' + str(epo) + '_' + str(i)  + "_tar.png", tarr)
 
             outt = outputs.view(256, 128).detach().numpy() * 255
             np.clip(outt, np.min(outt), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/' + str(epo) +'_'+ str(i)  + "_sep.png", outt)
-
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/SSIM/' + str(epo) + '_' + str(i)  + "_sep.png", outt)
+    
             plt.figure(figsize = (20, 10))
             plt.plot(loss_record)
             plt.xlabel('iterations')
             plt.ylabel('loss')
-            plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/L2/')
-            
-#            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
+            plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/SSIM/')
    
     gc.collect()
     plt.close("all")
@@ -680,9 +680,9 @@ for epo in range(epoch):
 #        Save Model & Loss
 #=============================================
 
-torch.save(Res_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/res.pkl')
-torch.save(A_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/A.pkl')
-torch.save(featurenet.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/feat.pkl')
+torch.save(Res_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/SSIM/res.pkl')
+torch.save(A_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/SSIM/A.pkl')
+torch.save(featurenet.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/SSIM/feat.pkl')
 
 
 

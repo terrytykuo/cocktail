@@ -665,7 +665,6 @@ for epo in range(epoch):
             np.clip(outt, np.min(outt), 1)
             cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1/' + '_' + str(epo) + str(i)  + "_sep.png", outt)
 
-        if i % 200 == 0:
             plt.figure(figsize = (20, 10))
             plt.plot(loss_record)
             plt.xlabel('iterations')
