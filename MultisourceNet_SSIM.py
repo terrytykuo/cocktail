@@ -668,7 +668,7 @@ for epo in range(epoch):
             plt.plot(loss_record)
             plt.xlabel('iterations')
             plt.ylabel('loss')
-            plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/SSIM/')
+            plt.savefig('loss_SSIM.png')
    
     gc.collect()
     plt.close("all")
