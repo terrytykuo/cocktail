@@ -646,14 +646,12 @@ for epo in range(epoch):
 
         
         loss_record.append(loss.item())
-        print (i)
+        print ('[%d, %2d] loss: %.3f' % (epo, i, loss.item()))
     
     
     
 
         if i % 100 == 0:
-
-            print ('[%d, %2d] loss: %.3f' % (epo, i, loss.item()))
 
             inn = inputs.view(256, 128).detach().numpy() * 255
             np.clip(inn, np.min(inn), 1)
