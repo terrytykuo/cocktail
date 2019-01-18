@@ -24,7 +24,7 @@ import cv2
 #=============================================
 
 epoch = 200
-lr = 0.01
+lr = 0.05
 mom = 0.9
 bs = 1
 
@@ -668,7 +668,7 @@ for epo in range(epoch):
             plt.plot(loss_record)
             plt.xlabel('iterations')
             plt.ylabel('loss')
-            plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/SSIM/loss_SSIM.png')
+            plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/loss_SSIM.png')
    
     gc.collect()
     plt.close("all")
