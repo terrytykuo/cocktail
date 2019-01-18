@@ -28,7 +28,7 @@ for i in range(10):
             size = 2, replace = False)
 
         # generate spectrograms 
-        spec_file = np.random.choice(os.listdir(sliced_pool_path + full_audio[int(ind[0])] + '/'))
+        spec_file = np.random.choice(os.listdir(sliced_pool_path + full_audio[int(ind[0])] + '/for_mix/'))
         print (spec_file)
         spec0 = gen_spectrogram(sliced_pool_path + full_audio[int(ind[0])] + '/for_mix/' + spec_file)
 
