@@ -23,7 +23,7 @@ import cv2
 #        Hyperparameters
 #=============================================
 
-epoch = 100
+epoch = 200
 lr = 0.01
 mom = 0.9
 bs = 1
@@ -665,16 +665,13 @@ for epo in range(epoch):
             np.clip(outt, np.min(outt), 1)
             cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L1/' + '_' + str(epo) + str(i)  + "_sep.png", outt)
 
-    
-    loss_record.append(loss.item())
-    plt.figure(figsize = (20, 10))
-    plt.plot(loss_record)
-    plt.xlabel('iterations')
-    plt.ylabel('loss')
-    plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/L1/')
-    
-    print ('[%d] loss: %.3f' % (epo, loss.item()))
-#            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
+        if i % 200 == 0:
+            plt.figure(figsize = (20, 10))
+            plt.plot(loss_record)
+            plt.xlabel('iterations')
+            plt.ylabel('loss')
+            plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/L2')
+ 
    
     gc.collect()
     plt.close("all")
