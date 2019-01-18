@@ -28,12 +28,14 @@ selection_space = full_audio
 #===================================
 #            process
 #===================================
-mix_spec = []
-spec0_cluster = []
-spec1_cluster = []
-label =[]
+
 
 for i in range(10):
+    mix_spec = []
+    spec0_cluster = []
+    spec1_cluster = []
+    label = []
+
     for j in range(100):
 
         # randomly select 2 numbers from 0~9 as index of full_audio
