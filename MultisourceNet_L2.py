@@ -69,9 +69,9 @@ if server == True:
 
 
 clean_dir = root_dir + 'mix_pool/feature/' 
-mix_dir = root_dir + 'mix_pool/mix_spec/' # 10-people mix
-target_spec_dir = root_dir + 'mix_pool/target_spec/' 
-target_label_dir = root_dir + 'mix_pool/target_label/'
+mix_dir = root_dir + 'mix_pool/two_mix_spec/mix_spec/' # 2-people mix
+target_spec_dir = root_dir + 'mix_pool/two_mix_spec/target_spec/' 
+target_label_dir = root_dir + 'mix_pool/two_mix_spec/label/'
 
 full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
       'constructivebeekeeping',
