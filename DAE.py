@@ -73,7 +73,7 @@ clean_dir = root_dir + 'clean/'
 # clean_label_dir = root_dir + 'clean_labels/' 
 # mix_label_dir = root_dir + 'mix_labels/' 
 
-# cleanfolder = os.listdir(clean_dir)
+cleanfolder = os.listdir(clean_dir)
 # cleanfolder.sort()
 
 # mixfolder = os.listdir(mix_dir)
