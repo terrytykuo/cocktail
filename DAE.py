@@ -68,7 +68,7 @@ if server == True:
     root_dir = '/home/guotingyou/cocktail_phase2/'
 
 
-clean_dir = root_dir + 'clean/' 
+clean_dir = root_dir + 'clean/first_part/' 
 # mix_dir = root_dir + 'mix/' 
 # clean_label_dir = root_dir + 'clean_labels/' 
 # mix_label_dir = root_dir + 'mix_labels/' 
