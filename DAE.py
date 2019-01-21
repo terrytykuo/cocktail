@@ -124,7 +124,6 @@ trainloader = torch.utils.data.DataLoader(dataset = trainset,
                                                 batch_size = bs,
                                                 shuffle = True)
 
-del clean_list
 #=============================================
 #        Model
 #=============================================
