@@ -514,7 +514,7 @@ for epo in range(epoch):
         print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
 
         if i % 20 == 0:
-            inn = inputs[0].view(256, 128).detach().numpy() * 255
+            inn = data[0].view(256, 128).detach().numpy() * 255
             cv2.imwrite(root_dir + 'cocktail/autoencoder/' + str(epo) + "_" + str(i) + "_clean.png", inn)
             
             out = outputs[0].view(256, 128).detach().numpy() * 255
