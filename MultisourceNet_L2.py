@@ -619,10 +619,6 @@ for epo in range(epoch):
         inputs = Variable(mix_spec)
         targets = target_spec
         
-        optimizer.zero_grad()
-        optimizer_A.zero_grad()
-
-        
         # get feature
         featureset = featureDataSet(clean_dir, int(target_label))
         feat_data, index = featureset.__getitem__()  
@@ -641,8 +637,12 @@ for epo in range(epoch):
         loss = criterion(outputs, target)
 
         loss.backward()
-        optimizer.step()
+ #       optimizer.step()
         optimizer_A.step()
+
+#        optimizer.zero_grad()
+        optimizer_A.zero_grad()
+
 
         
         loss_record.append(loss.item())
@@ -651,16 +651,16 @@ for epo in range(epoch):
         if i % 100 == 0:
 
             inn = inputs.view(256, 128).detach().numpy() * 255
-            np.clip(inn, np.min(inn), 1)
+#            np.clip(inn, np.min(inn), 1)
             cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/2people/' + str(epo) +'_'+ str(i)  + "_mix.png", inn)
 
             tarr = target.view(256, 128).detach().numpy() * 255
-            np.clip(tarr, np.min(tarr), 1)
+#            np.clip(tarr, np.min(tarr), 1)
             cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/2people/' + str(epo) +'_'+ str(i)  + "_tar.png", tarr)
 
             outt = outputs.view(256, 128).detach().numpy() * 255
-            np.clip(outt, np.min(outt), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/2people/' + str(epo) +'_'+ str(i)  + "_sep.png", outt)
+#            np.clip(outt, np.min(outt), 1)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/2people/' + str(epo) +'_'+ str(i)  + "_out.png", outt)
 
             plt.figure(figsize = (20, 10))
             plt.plot(loss_record)
