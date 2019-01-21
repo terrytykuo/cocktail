@@ -505,7 +505,7 @@ for epo in range(epoch):
         loss = criterion(outputs, targets)
 #        loss = - criterion(outputs, inputs)
 #        ssim_value = - loss.data.item()
-        loss_record.append(loss.item())
+        loss_record.append(loss.item()[:5])
         loss.backward()
 
         optimizer.step()
@@ -521,7 +521,6 @@ for epo in range(epoch):
             cv2.imwrite(root_dir + 'cocktail/autoencoder/' + str(epo) + "_" + str(i) + "_re.png", out)    
                
             plt.figure(figsize = (20, 10))
-            print ('loss_record', loss_record)
             plt.plot(loss_record)
             plt.xlabel('iterations')
             plt.ylabel('loss')
