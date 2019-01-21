@@ -494,10 +494,10 @@ loss_record = []
 model.train()
 for epo in range(epoch):
     for i, data in enumerate(trainloader, 0):
-        inputs = data
-        inputs = Variable(inputs)
+ #       inputs = data
+ #       inputs = Variable(inputs)
 
-        top = model.upward(inputs + white(inputs))
+        top = model.upward(data) #+ white(inputs))
         outputs = model.downward(top, shortcut = True)
 
         targets = inputs.view(bs, 1, 256, 128)
