@@ -19,12 +19,14 @@ import numpy as np
 import gc
 import cv2
 
+random.seed(7)
+
 #=============================================
 #        Hyperparameters
 #=============================================
 
 epoch = 5
-lr = 0.001
+lr = 0.0005
 mom = 0.9
 bs = 10
 
@@ -466,7 +468,7 @@ class ResDAE(nn.Module):
         return y
 
 model = ResDAE()
-# model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
+model.load_state_dict(torch.load(root_dir + 'cocktail/autoencoder/DAE.pkl'))
 # print (model)
 
 #=============================================
