@@ -525,14 +525,11 @@ for epo in range(epoch):
             plt.xlabel('iterations')
             plt.ylabel('loss')
             plt.savefig(root_dir + 'cocktail/autoencoder/DAE_loss.png')
-            
-         
+            plt.close("all")
+            gc.collect()
 
-#            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
-   
-    gc.collect()
-    plt.close("all")
-    
+
+
 #=============================================
 #        Save Model & Loss
 #=============================================
