@@ -473,9 +473,9 @@ model = ResDAE()
 #        Optimizer
 #=============================================
 
-import pytorch_ssim
-#criterion = nn.MSELoss()
-criterion = pytorch_ssim.SSIM()
+# import pytorch_ssim
+criterion = nn.MSELoss()
+# criterion = pytorch_ssim.SSIM()
 optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
 
 #=============================================
@@ -502,8 +502,8 @@ for epo in range(epoch):
 
         targets = inputs.view(bs, 1, 256, 128)
         outputs = outputs.view(bs, 1, 256, 128)
-#        loss = criterion(outputs, targets)
-        loss = - criterion(outputs, inputs)
+        loss = criterion(outputs, targets)
+#        loss = - criterion(outputs, inputs)
 #        ssim_value = - loss.data.item()
         loss_record.append(loss.item())
         loss.backward()
