@@ -103,7 +103,8 @@ class MSourceDataSet(Dataset):
         cleanblock = torch.cat(clean_list, 0)
 #         mixblock = torch.cat(mix_list, 0)
         self.spec = cleanblock
-                
+        
+        del clean_list
         
     def __len__(self):
         return self.spec.shape[0]
@@ -501,11 +502,12 @@ for epo in range(epoch):
 
         targets = inputs.view(bs, 1, 256, 128)
         outputs = outputs.view(bs, 1, 256, 128)
-        loss = criterion (outputs, targets)
+        loss = criterion(outputs, targets)
 #        loss = - criterion(outputs, inputs)
 #        ssim_value = - loss.data.item()
-
+        loss_record.append(loss.item())
         loss.backward()
+
         optimizer.step()
         optimizer.zero_grad()
 
@@ -519,6 +521,7 @@ for epo in range(epoch):
             cv2.imwrite(root_dir + 'cocktail/autoencoder/' + str(epo) + "_" + str(i) + "_re.png", out)    
                
             plt.figure(figsize = (20, 10))
+            print ('loss_record', loss_record)
             plt.plot(loss_record)
             plt.xlabel('iterations')
             plt.ylabel('loss')
