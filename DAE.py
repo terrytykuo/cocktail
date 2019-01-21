@@ -18,7 +18,7 @@ import json
 import numpy as np
 import gc
 import cv2
-
+import random
 random.seed(7)
 
 #=============================================
