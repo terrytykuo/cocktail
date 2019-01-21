@@ -500,7 +500,7 @@ for epo in range(epoch):
         top = model.upward(data) #+ white(inputs))
         outputs = model.downward(top, shortcut = True)
 
-        targets = inputs.view(bs, 1, 256, 128)
+        targets = data.view(bs, 1, 256, 128)
         outputs = outputs.view(bs, 1, 256, 128)
         loss = criterion(outputs, targets)
 #        loss = - criterion(outputs, inputs)
