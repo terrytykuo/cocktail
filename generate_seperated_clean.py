@@ -50,10 +50,10 @@ for i in range(blocks):
         print ("label = ", name , ", shape = ", all_clean_label.shape)
 
     
-        with open(mixed_pool_path +  '/feature/' + name + '/' + str(i) + '.json', 'w') as jh:
+        with open(mixed_pool_path +  'feature/' + name + '/' + str(i) + '.json', 'w') as jh:
             json.dump(all_clean_spec.tolist(), jh)
 
-        with open(mixed_pool_path +  '/feature_label/' + name + '/' + str(i) + '.json', 'w') as jh:
+        with open(mixed_pool_path +  'feature_label/' + name + '/' + str(i) + '.json', 'w') as jh:
             json.dump(all_clean_label.tolist(), jh)
 
 
