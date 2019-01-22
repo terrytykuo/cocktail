@@ -43,11 +43,11 @@ class featureDataSet(Dataset):
 
         clean_list = []
         clean_label_list = []
-                
+
         for i in cleanfolder:
             with open(clean_dir + '{}'.format(i)) as f:
                 clean_list.append(torch.Tensor(json.load(f)))
-                
+
         for i in cleanlabelfolder:
             with open(clean_label_dir + '{}'.format(i)) as f:
                 clean_label_list.append(torch.Tensor(json.load(f)))
@@ -64,7 +64,6 @@ class featureDataSet(Dataset):
 
                 
     def __getitem__(self, index): 
-
         spec = self.spec[index]
         label = self.label[index]
         return spec, label
