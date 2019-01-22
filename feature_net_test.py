@@ -118,7 +118,7 @@ criterion = torch.nn.NLLLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
 
 #============================================
-#              training
+#              testing
 #============================================
 
 loss_record = []
