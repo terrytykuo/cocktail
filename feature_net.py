@@ -57,7 +57,7 @@ class featureDataSet(Dataset):
         self.label = torch.Tensor(json.load(f))
 
     def __len__(self):
-        return self.spec.shape[0]
+        return SAMPLES_PER_JSON * len(cleanfolder)
 
     def __getitem__(self, index):
         # print("__getitem__: " + str(index))
