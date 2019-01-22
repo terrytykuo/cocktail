@@ -33,7 +33,7 @@ SAMPLES_PER_JSON = 200
 
 #======================================
 clean_dir = '/home/tk/Documents/clean/' 
-clean_label_dir = '/home/tk/Documents/clean_labels' 
+clean_label_dir = '/home/tk/Documents/clean_labels/' 
 #========================================
 
 cleanfolder = os.listdir(clean_dir)
