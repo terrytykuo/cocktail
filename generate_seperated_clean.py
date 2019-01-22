@@ -7,6 +7,8 @@ import json
 root_dir = '/home/tk/Documents/'
 sliced_pool_path = '/home/tk/Documents/sliced_pool/'
 mixed_pool_path =  '/home/tk/Documents/mix_pool/'
+clean_path = '/home/tk/Documents/clean/'
+cleanlabel_path = '/home/tk/Documents/clean_labels/'
 
 full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
               'constructivebeekeeping',
@@ -16,7 +18,7 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
               'romancecommonplace', 'travelstoriesretold']
               
               
-blocks = 15
+blocks = 11
 
 for i in range(blocks):
     for ind, name in enumerate(full_audio):
@@ -54,10 +56,10 @@ for i in range(blocks):
         print ("label = ", name , ", shape = ", all_clean_label.shape)
 
     
-        with open(mixed_pool_path +  'feature/' + name + '/' + str(i) + '.json', 'w') as jh:
+        with open(clean_path + name + '_' + str(i) + '.json', 'w') as jh:
             json.dump(all_clean_spec.tolist(), jh)
 
-        with open(mixed_pool_path +  'feature_label/' + name + '/' + str(i) + '.json', 'w') as jh:
+        with open(cleanlabel_path + name + '_' + str(i) + '.json', 'w') as jh:
             json.dump(all_clean_label.tolist(), jh)
 
 
