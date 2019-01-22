@@ -28,9 +28,9 @@ if server == True:
 full_audio_path = root_dir + 'full_audio/' 
 
 # 10 sec sliced will be stored here
-sec10_sliced_path = root_dir + 'slice_10sec/' 
+sec10_sliced_path = root_dir + 'slice_10sec/all/' 
 
-# 0.1 sec slices will be stored here
+# 0.5 sec slices will be stored here
 point_sec_sliced_path = root_dir + 'slice_pointsec/' 
 
 # clean audios will be stored here
@@ -43,34 +43,25 @@ labels_path = root_dir + 'clean_labels/'
 multiplication = 1
 
 # blocks 
-blocks_volume = 60
+blocks_volume = 100
 
 #minimum audio length
 length = 0.5
 #======================================================================
-
-
-audio_list = os.listdir(full_audio_path)
-if ".DS_Store" in audio_list:
-    audio_list.remove(".DS_Store")
-print ("There are", len(audio_list), "fully concatenated files")
-
+audio_list = os.listdir(sec10_sliced_path)
+            
 
 for p in range(blocks_volume):
 
-    # remove current files 
-    to_clear = os.listdir(point_sec_sliced_path)
-    for c in to_clear:
-        os.remove(point_sec_sliced_path + c)
 
     pieces = p # controls which 10 sec segments will be processed 0.1 sec slicing 
 
-    ## 0.1 sec slicing
+    ## 0.5 sec slicing
     print ('slicing segment', p, 'now')
     file_name = []
     for i in audio_list:
         slice_name = i[:-4]
-        file_name.append(slice_name) # generate 0.1 sec file list
+        file_name.append(slice_name) # generate 0.5 sec file list
 
     for file in file_name:
         for i in range(pieces * multiplication , (pieces + 1) * multiplication):
