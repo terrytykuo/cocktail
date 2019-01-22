@@ -27,7 +27,7 @@ for audio_name in full_audio:
 
 
     single_audio = np.array(single_audio)
-    single_audio = np.hstack(single_audio)
+    single_audio = np.vstack(single_audio)
 
     print ("shape = ", single_audio.shape)
 
