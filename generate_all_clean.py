@@ -27,12 +27,12 @@ for audio_name in full_audio:
 
 
     single_audio = np.array(single_audio)
-    single_audio = np.stack(single_audio)
+    single_audio = np.htack(single_audio)
 
     print ("shape = ", single_audio.shape)
 
 
-    with open(mixed_pool_path +  'feature/' + name + '.json', 'w') as jh:
+    with open(mixed_pool_path +  'feature/' + audio_name + '.json', 'w') as jh:
         json.dump(single_audio.tolist(), jh)
 
     # with open(mixed_pool_path +  'feature_label/' + name + '/' + str(i) + '.json', 'w') as jh:
