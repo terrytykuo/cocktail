@@ -32,7 +32,7 @@ for i in range(blocks):
 
 
         file_name_list = os.listdir(sliced_pool_path + name + '/clean/')
-        file_name = np.random.choice(file_name_list, 100)
+        file_name = np.random.choice(file_name_list, 1000)
         
 
         for k in file_name:
