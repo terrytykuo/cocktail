@@ -16,7 +16,7 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
               'romancecommonplace', 'travelstoriesretold']
               
               
-blocks = 15
+blocks = 25
 
 for i in range(blocks):
     for ind, name in enumerate(full_audio):
@@ -32,7 +32,7 @@ for i in range(blocks):
 
 
         file_name_list = os.listdir(sliced_pool_path + name + '/clean/')
-        file_name = np.random.choice(file_name_list, 1000)
+        file_name = np.random.choice(file_name_list, 100)
         
 
         for k in file_name:
