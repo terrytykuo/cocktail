@@ -42,9 +42,6 @@ cleanfolder.sort()
 cleanlabelfolder = os.listdir(clean_label_dir)
 cleanlabelfolder.sort()
 
-# clean_list = []
-# clean_label_list = []
-
 #========================================
 
 class featureDataSet(Dataset):
@@ -58,7 +55,6 @@ class featureDataSet(Dataset):
         return SAMPLES_PER_JSON * len(cleanfolder)
 
     def __getitem__(self, index):
-        # print("__getitem__: " + str(index))
 
         newest_json_index = index // SAMPLES_PER_JSON
         offset_in_json = index % SAMPLES_PER_JSON
@@ -79,34 +75,95 @@ class featureDataSet(Dataset):
 #=================================================    
 #           Dataloader 
 #=================================================
-featureset = featureDataSet()
+featureset  = featureDataSet()
 trainloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
-                                                shuffle = False)
+                                                shuffle = False) # must be False for efficiency
 
 #=================================================    
 #           model 
 #=================================================
+''' ResBlock '''
+class ResBlock(nn.Module):
+    def __init__(self, channels_in, channels_out):
+        super(ResBlock, self).__init__()
+
+        self.channels_in = channels_in
+        self.channels_out = channels_out
+
+        self.conv1 = nn.Conv2d(in_channels=channels_in, out_channels=channels_out, kernel_size=(3,3), padding=1)
+        self.conv2 = nn.Conv2d(in_channels=channels_out, out_channels=channels_out, kernel_size=(3,3), padding=1)
+
+    def forward(self, x):
+        if self.channels_out > self.channels_in:
+            x1 = F.relu(self.conv1(x))
+            x1 =        self.conv2(x1)
+            x  = self.sizematch(self.channels_in, self.channels_out, x)
+            return x + x1
+        elif self.channels_out < self.channels_in:
+            x = F.relu(self.conv1(x))
+            x1 =       self.conv2(x)
+            x = x + x1
+            return x
+        else:
+            x1 = F.relu(self.conv1(x))
+            x1 =        self.conv2(x1)
+            x = x + x1
+            return x
+
+    def sizematch(self, channels_in, channels_out, x):
+        zeros = torch.zeros( (x.size()[0], channels_out - channels_in, x.shape[2], x.shape[3]), dtype=torch.float )
+        return torch.cat((x, zeros), dim=1)
+
+
 class featureNet(nn.Module):
     def __init__(self):
         super(featureNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 4, kernel_size=(2,2), stride=2)
-        self.conv2 = nn.Conv2d(4, 8, kernel_size=(2,2), stride=2)
-        self.maxpool = nn.MaxPool2d(kernel_size = (2,2))
-        self.batchnorm = nn.BatchNorm2d(8)
+        
+        self.conv1 = nn.Sequential(
+            ResBlock(1, 4),
+            ResBlock(4, 4)
+        )
+        self.maxpool1 = nn.MaxPool2d(kernel_size=2)
+        self.batchnorm1 = nn.BatchNorm2d(4)
+
+        self.conv2 = nn.Sequential(
+            ResBlock(4, 8),
+            ResBlock(8, 8)
+        )
+        self.maxpool2 = nn.MaxPool2d(kernel_size=2)
+        self.batchnorm2 = nn.BatchNorm2d(8)
+
+        self.conv3 = nn.Sequential(
+            ResBlock(8, 16),
+            ResBlock(16, 16)
+        )
+        self.maxpool3 = nn.MaxPool2d(kernel_size=2)
+        self.batchnorm3 = nn.BatchNorm2d(16)
+
+        self.conv4 = nn.Sequential(
+            ResBlock(16, 16),
+            ResBlock(16, 16)
+        )
+        self.maxpool4 = nn.MaxPool2d(kernel_size=2)
+        self.batchnorm4 = nn.BatchNorm2d(16)
+
         self.fc1 = nn.Linear(16*8*8, 512)
-        self.fc2 = nn.Linear(512, 256)
-        self.fc3 = nn.Linear(256, 10)
+        self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
         x = x.view(bs, 1 ,256, 128)
-        x = F.relu(self.maxpool(self.conv1(x)))
-        x = F.relu(self.maxpool(self.conv2(x)))
-        x = self.batchnorm(x)
-        x = x.view(-1, 1024)
+        
+        x = F.relu(self.conv1(x))
+        x = self.maxpool1(x)
+        x = F.relu(self.conv2(x))
+        x = self.maxpool2(x)
+        x = F.relu(self.conv3(x))
+        x = self.maxpool3(x)
+        x = F.relu(self.conv4(x))
+        x = self.maxpool4(x)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.fc3(x)
 
         return F.log_softmax(x, dim = 1)
     
