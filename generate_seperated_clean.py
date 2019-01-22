@@ -16,7 +16,7 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
               'romancecommonplace', 'travelstoriesretold']
               
               
-blocks = 100
+blocks = 10
 
 for i in range(blocks):
     for ind, name in enumerate(full_audio):
@@ -27,8 +27,12 @@ for i in range(blocks):
         if (mixed_pool_path + 'feature/' + name) == False:
             os.mkdir(mixed_pool_path + 'feature/' + name)
         
+        if (mixed_pool_path + 'feature_label/' + name) == False:
+            os.mkdir(mixed_pool_path + 'feature_label/' + name)
+
+
         file_name_list = os.listdir(sliced_pool_path + name + '/clean/')
-        file_name = np.random.choice(file_name_list, 10)
+        file_name = np.random.choice(file_name_list, 100)
         
 
         for k in file_name:
