@@ -60,7 +60,7 @@ class featureDataSet(Dataset):
         return self.spec.shape[0]
 
     def __getitem__(self, index):
-        print("__getitem__: " + str(index))
+        # print("__getitem__: " + str(index))
         
         newest_json_index = index // SAMPLES_PER_JSON
         offset_in_json = index % SAMPLES_PER_JSON
