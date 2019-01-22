@@ -24,7 +24,7 @@ import cv2
 #=============================================
 
 epoch = 2
-lr = 0.001
+lr = 0.005
 mom = 0.9
 bs = 10
 
@@ -61,27 +61,19 @@ def white(x):
 #        path
 #=============================================
 
-server = False
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--root_dir")
+parser.parse_args()
 
-root_dir = '/home/tk/Documents/'
-if server == True:
-    root_dir = '/home/guotingyou/cocktail_phase2/'
 
-
-clean_dir = root_dir + 'clean/' 
-# mix_dir = root_dir + 'mix/' 
-# clean_label_dir = root_dir + 'clean_labels/' 
-# mix_label_dir = root_dir + 'mix_labels/' 
+clean_dir = root_dir + 'clean/'
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
 
-# mixfolder = os.listdir(mix_dir)
-# mixfolder.sort()
-
-
 clean_list = []
-# mix_list = []
+
 
 #=============================================
 #       Define Datasets
@@ -89,17 +81,10 @@ clean_list = []
 class MSourceDataSet(Dataset):
     
     def __init__(self, clean_dir):
-        
 
         # Overfitting single block
         with open(clean_dir + 'clean3.json') as f:
             clean_list.append(torch.Tensor(json.load(f)))
-
-                    
-#        for i in cleanfolder:
-#            with open(clean_dir + '{}'.format(i)) as f:
-#                clean_list.append(torch.Tensor(json.load(f)))
-        
         
         cleanblock = torch.cat(clean_list, 0)
 #         mixblock = torch.cat(mix_list, 0)
@@ -286,7 +271,7 @@ class ResDAE(nn.Module):
             ResBlock(512, 256),
             ResBlock(256, 256),
             ResTranspose(256, 256),
-#            nn.ConvTranspose2d(256, 256, kernel_size = (2,2), stride = 2),
+            # nn.ConvTranspose2d(256, 256, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(256),
         )
 
@@ -298,7 +283,7 @@ class ResDAE(nn.Module):
             ResBlock(256, 128),
             ResBlock(128, 128),
             ResTranspose(128, 128),
-#            nn.ConvTranspose2d(128, 128, kernel_size = (2,2), stride = 2),
+            # nn.ConvTranspose2d(128, 128, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(128),
         )
 
@@ -311,7 +296,7 @@ class ResDAE(nn.Module):
             ResBlock(128, 64),
             ResBlock(64, 64),
             ResTranspose(64, 64),
-#            nn.ConvTranspose2d(64, 64, kernel_size = (2,2), stride = 2),
+            # nn.ConvTranspose2d(64, 64, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(64),
         )
 
@@ -324,7 +309,7 @@ class ResDAE(nn.Module):
             ResBlock(64, 32),
             ResBlock(32, 32),
             ResTranspose(32, 32),
-#            nn.ConvTranspose2d(32, 32, kernel_size = (2,2), stride = 2),
+            # nn.ConvTranspose2d(32, 32, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(32),
         )
 
@@ -337,7 +322,7 @@ class ResDAE(nn.Module):
             ResBlock(32, 16),
             ResBlock(16, 16),
             ResTranspose(16, 16),
-#            nn.ConvTranspose2d(16, 16, kernel_size = (2,2), stride = 2),
+            # nn.ConvTranspose2d(16, 16, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(16),
         )
 
@@ -350,7 +335,7 @@ class ResDAE(nn.Module):
             ResBlock(16, 8),
             ResBlock(8, 8),
             ResTranspose(8, 8),
-#            nn.ConvTranspose2d(8, 8, kernel_size = (2,2), stride = 2),
+            # nn.ConvTranspose2d(8, 8, kernel_size = (2,2), stride = 2),
             nn.BatchNorm2d(8),
         )
 
@@ -371,48 +356,48 @@ class ResDAE(nn.Module):
     def upward(self, x, a7=None, a6=None, a5=None, a4=None, a3=None, a2=None):
         x = x.view(bs, 1, 256, 128)
         # 1x128x128
-#        print ("initial", x.shape)
+        # print ("initial", x.shape)
         x = self.upward_net1(x)
-#        print ("after conv1", x.shape)
+        # print ("after conv1", x.shape)
 
 
         # 8x64x64
         x = self.upward_net2(x)
         if a2 is not None: x = x * a2
         self.x2 = x
-#        print ("after conv2", x.shape)
+        # print ("after conv2", x.shape)
 
         # 16x32x32
         x = self.upward_net3(x)
         if a3 is not None: x = x * a3
         self.x3 = x
-#        print ("after conv3", x.shape)
+        # print ("after conv3", x.shape)
 
         # 32x16x16
 
         x = self.upward_net4(x)
         if a4 is not None: x = x * a4
         self.x4 = x
-#        print ("after conv4", x.shape)
+        # print ("after conv4", x.shape)
 
         # 64x8x8
 
         x = self.upward_net5(x)
         if a5 is not None: x = x * a5
         self.x5 = x
-#        print ("after conv5", x.shape)
+        # print ("after conv5", x.shape)
 
         
         # 128x4x4
         x = self.upward_net6(x)
         if a6 is not None: x = x * a6
-#        print ("after conv6", x.shape)
+        # print ("after conv6", x.shape)
 
         # 256x2x2
 
         x = self.upward_net7(x)
         if a7 is not None: x = x * a7
-#        print ("after conv7", x.shape)
+        # print ("after conv7", x.shape)
 
         # 512x1x1
 
@@ -420,55 +405,56 @@ class ResDAE(nn.Module):
 
 
     def downward(self, y, shortcut= True):
-#        print ("begin to downward, y.shape = ", y.shape)
+        # print ("begin to downward, y.shape = ", y.shape)
         # 512x1x1
         y = self.downward_net7(y)
-#        print ("after down7", y.shape)
+        # print ("after down7", y.shape)
 
 
         # 256x2x2
         y = self.downward_net6(y)
-#        print ("after down6", y.shape)
+        # print ("after down6", y.shape)
 
         # 128x4x4
         if shortcut:
             y = torch.cat((y, self.x5), 1)
             y = F.relu(self.uconv5(y))
         y = self.downward_net5(y)
-#        print ("after down5", y.shape)
+        # print ("after down5", y.shape)
 
         # 64x8x8
         if shortcut:
             y = torch.cat((y, self.x4), 1)
             y = F.relu(self.uconv4(y))
         y = self.downward_net4(y)
-#        print ("after down4", y.shape)
+        # print ("after down4", y.shape)
 
         # 32x16x16
         if shortcut:
             y = torch.cat((y, self.x3), 1)
             y = F.relu(self.uconv3(y))
         y = self.downward_net3(y)
-#        print ("after down3", y.shape)
+        # print ("after down3", y.shape)
 
         # 16x32x32
         if shortcut:
             y = torch.cat((y, self.x2), 1)
             y = F.relu(self.uconv2(y))
         y = self.downward_net2(y)
-#        print ("after down2", y.shape)
+        # print ("after down2", y.shape)
 
         # 8x64x64
         y = self.downward_net1(y)
-#        print ("after down1", y.shape)
+        # print ("after down1", y.shape)
  
         # 1x128x128
 
         return y
 
-# model = ResDAE()
-model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
-# print (model)
+
+model = ResDAE()
+# model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
+print (model)
 
 #=============================================
 #        Optimizer
