@@ -16,30 +16,45 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
               'romancecommonplace', 'travelstoriesretold']
               
               
-blocks = 1
+blocks = 100
 
 for i in range(blocks):
-    for name in full_audio:
+    for ind, name in enumerate(full_audio):
         
         all_clean_spec = []
+        all_clean_label = []
+
         if (mixed_pool_path + 'feature/' + name) == False:
             os.mkdir(mixed_pool_path + 'feature/' + name)
         
         file_name_list = os.listdir(sliced_pool_path + name + '/clean/')
         file_name = np.random.choice(file_name_list, 10)
         
+
         for k in file_name:
             spec = gen_spectrogram(sliced_pool_path + name + '/clean/' + k)
             print (k)
             all_clean_spec.append(spec)
+            all_clean_label.append(ind)
+            print (ind)
             
             
         all_clean_spec = np.array(all_clean_spec)
         all_clean_spec = np.stack(all_clean_spec)
+
+        all_clean_label = np.array(all_clean_label)
+        all_clean_label = np.stack(all_clean_label)
+
             
         print ("name = ", name , ", shape = ", all_clean_spec.shape)
+        print ("label = ", name , ", shape = ", all_clean_label.shape)
+
     
         with open(mixed_pool_path +  '/feature/' + name + '/' + str(i) + '.json', 'w') as jh:
             json.dump(all_clean_spec.tolist(), jh)
+
+        with open(mixed_pool_path +  '/feature_label/' + name + '/' + str(i) + '.json', 'w') as jh:
+            json.dump(all_clean_label.tolist(), jh)
+
 
 
