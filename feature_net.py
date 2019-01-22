@@ -33,7 +33,7 @@ SAMPLES_PER_JSON = 200
 
 #======================================
 clean_dir = '/home/tk/Documents/clean/' 
-clean_label_dir = '/home/tk/Documents/clean_labels' 
+clean_label_dir = '/home/tk/Documents/clean_labels/' 
 #========================================
 
 cleanfolder = os.listdir(clean_dir)
@@ -48,7 +48,7 @@ cleanlabelfolder.sort()
 #========================================
 
 class featureDataSet(Dataset):
-    def __init__(self, clean_dir, clean_label_dir):
+    def __init__(self):
         self.curr_json_index = 0
 
         self.spec  = None
@@ -57,7 +57,7 @@ class featureDataSet(Dataset):
 
     def __len__(self):
         if self.spec == None:
-            f = open(clean_label_dir + '{}'.format(cleanfolder[self.curr_json_index]))
+            f = open(clean_label_dir + '{}'.format(cleanlabelfolder[self.curr_json_index]))
             self.spec = torch.Tensor(json.load(f))
         return self.spec.shape[0]
 
@@ -83,7 +83,7 @@ class featureDataSet(Dataset):
 #=================================================    
 #           Dataloader 
 #=================================================
-featureset = featureDataSet(clean_dir, clean_label_dir)
+featureset = featureDataSet()
 trainloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
                                                 shuffle = True)
