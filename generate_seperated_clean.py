@@ -16,7 +16,7 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
               'romancecommonplace', 'travelstoriesretold']
               
               
-blocks = 10
+blocks = 11
 
 for i in range(blocks):
     for ind, name in enumerate(full_audio):
