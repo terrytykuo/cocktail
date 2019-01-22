@@ -43,7 +43,7 @@ labels_path = root_dir + 'clean_labels/'
 multiplication = 1
 
 # blocks 
-blocks_volume = 60
+blocks_volume = 100
 
 #minimum audio length
 length = 0.5
