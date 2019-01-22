@@ -24,7 +24,7 @@ import cv2
 #=============================================
 
 epoch = 200
-lr = 0.01
+lr = 0.001
 mom = 0.9
 bs = 1
 
@@ -580,8 +580,8 @@ class ResDAE(nn.Module):
         return y
 
 Res_model = ResDAE()
-Res_model = torch.load(root_dir + 'DAE_SSIM.pkl')
-# Res_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/res.pkl'))
+# Res_model = torch.load(root_dir + 'cocktail/autoencoder/DAE.pkl')
+Res_model.load_state_dict(torch.load(root_dir + 'cocktail/autoencoder/DAE.pkl'))
 
 
 # print (model)
@@ -637,10 +637,10 @@ for epo in range(epoch):
         loss = criterion(outputs, target)
 
         loss.backward()
- #       optimizer.step()
+ 
+        optimizer.step()
         optimizer_A.step()
-
-#        optimizer.zero_grad()
+        optimizer.zero_grad()
         optimizer_A.zero_grad()
 
 
@@ -648,7 +648,7 @@ for epo in range(epoch):
         loss_record.append(loss.item())
         print ('[%d, %2d] loss: %.3f' % (epo, i, loss.item()))
     
-        if i % 100 == 0:
+        if i % 20 == 0:
 
             inn = inputs.view(256, 128).detach().numpy() * 255
 #            np.clip(inn, np.min(inn), 1)
@@ -668,13 +668,9 @@ for epo in range(epoch):
             plt.ylabel('loss')
             plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/L2/2people/loss_L2.png')
             
-#            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
-   
-    gc.collect()
-    plt.close("all")
 
-
-
+            gc.collect()
+            plt.close("all")   
     
 #=============================================
 #        Save Model & Loss
