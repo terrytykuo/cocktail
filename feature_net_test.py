@@ -32,19 +32,17 @@ clean_dir = '/home/tk/Documents/clean_test/'
 clean_label_dir = '/home/tk/Documents/clean_labels_test/' 
 #========================================
 
-cleanfolder = os.listdir(clean_dir)
-cleanfolder.sort()
-
-cleanlabelfolder = os.listdir(clean_label_dir)
-cleanlabelfolder.sort()
-
-clean_list = []
-clean_label_list = []
-
 #========================================
-
 class featureDataSet(Dataset):
     def __init__(self, clean_dir, clean_label_dir):
+        cleanfolder = os.listdir(clean_dir)
+        cleanfolder.sort()
+
+        cleanlabelfolder = os.listdir(clean_label_dir)
+        cleanlabelfolder.sort()
+
+        clean_list = []
+        clean_label_list = []
                 
         for i in cleanfolder:
             with open(clean_dir + '{}'.format(i)) as f:
@@ -73,14 +71,6 @@ class featureDataSet(Dataset):
 
     
 #=================================================    
-#           Dataloader 
-#=================================================
-featureset = featureDataSet(clean_dir, clean_label_dir)
-testloader = torch.utils.data.DataLoader(dataset = featureset,
-                                                batch_size = bs,
-                                                shuffle = True)
-
-#=================================================    
 #           model 
 #=================================================
 class featureNet(nn.Module):
@@ -106,22 +96,27 @@ class featureNet(nn.Module):
         x = self.fc3(x)
         
         return F.log_softmax(x, dim = 1)
-    
-model = featureNet()
-model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
-print (model)
+
 
 #============================================
 #              optimizer
 #============================================
-criterion = torch.nn.NLLLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
+
+#=================================================    
+#           Dataloader 
+#=================================================
+featureset = featureDataSet(clean_dir, clean_label_dir)
+testloader = torch.utils.data.DataLoader(dataset = featureset,
+                                                batch_size = bs,
+                                                shuffle = True)
 
 #============================================
 #              testing
 #============================================
 
 def test(model):
+    criterion = torch.nn.NLLLoss()
+
     loss_record = []
     every_loss = []
     epoch_loss = []
@@ -163,7 +158,8 @@ def test(model):
 
     return (float)(correct) / total
 
-test(model)
-           
-
-# plt.show()
+if __name__ == '__main__':
+    model_for_test = featureNet()
+    model_for_test.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
+    print(model_for_test)
+    test(model)
