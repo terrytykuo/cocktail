@@ -154,14 +154,16 @@ def test(model):
         epoch_loss.append(np.mean(every_loss))
         every_loss = []
 
+        plt.figure(figsize = (20, 10))
+        plt.plot(loss_record)
+        plt.xlabel('iterations')
+        plt.ylabel('loss')
+        plt.savefig('loss.png')
+        plt.close()
+
     return (float)(correct) / total
 
 test(model)
            
-plt.figure(figsize = (20, 10))
-plt.plot(loss_record)
-plt.xlabel('iterations')
-plt.ylabel('loss')
-plt.savefig('loss.png')
-plt.close()
+
 # plt.show()
