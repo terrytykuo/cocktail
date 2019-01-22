@@ -1,6 +1,5 @@
 import numpy as np
 import os
-from data_process import gen_spectrogram
 import json
 
 
@@ -16,49 +15,28 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
               'romancecommonplace', 'travelstoriesretold']
               
               
-blocks = 11
 
-for i in range(blocks):
-    for ind, name in enumerate(full_audio):
-        
-        all_clean_spec = []
-        all_clean_label = []
+for audio_name in full_audio:
 
-        if (mixed_pool_path + 'feature/' + name) == False:
-            os.mkdir(mixed_pool_path + 'feature/' + name)
-        
-        if (mixed_pool_path + 'feature_label/' + name) == False:
-            os.mkdir(mixed_pool_path + 'feature_label/' + name)
+    single_audio = []
+    file_list = os.listdir('/home/tk/Documents/mix_pool/feature/' + audio_name + '/')
+
+    for i in file_list:
+        with open('/home/tk/Documents/mix_pool/feature/' + audio_name + '/' + i) as f:
+            single_audio.append(json.load(f))
 
 
-        file_name_list = os.listdir(sliced_pool_path + name + '/clean/')
-        file_name = np.random.choice(file_name_list, 100)
-        
+    single_audio = np.array(single_audio)
+    single_audio = np.stack(single_audio)
 
-        for k in file_name:
-            spec = gen_spectrogram(sliced_pool_path + name + '/clean/' + k)
-            print (k)
-            all_clean_spec.append(spec)
-            all_clean_label.append(ind)
-            print (ind)
-            
-            
-        all_clean_spec = np.array(all_clean_spec)
-        all_clean_spec = np.stack(all_clean_spec)
+    print ("shape = ", single_audio.shape)
 
-        all_clean_label = np.array(all_clean_label)
-        all_clean_label = np.stack(all_clean_label)
 
-            
-        print ("name = ", name , ", shape = ", all_clean_spec.shape)
-        print ("label = ", name , ", shape = ", all_clean_label.shape)
+    with open(mixed_pool_path +  'feature/' + name + '.json', 'w') as jh:
+        json.dump(single_audio.tolist(), jh)
 
-    
-        with open(mixed_pool_path +  'feature/' + name + '/' + str(i) + '.json', 'w') as jh:
-            json.dump(all_clean_spec.tolist(), jh)
-
-        with open(mixed_pool_path +  'feature_label/' + name + '/' + str(i) + '.json', 'w') as jh:
-            json.dump(all_clean_label.tolist(), jh)
+    # with open(mixed_pool_path +  'feature_label/' + name + '/' + str(i) + '.json', 'w') as jh:
+    #     json.dump(all_clean_label.tolist(), jh)
 
 
 
