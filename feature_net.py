@@ -122,11 +122,12 @@ optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
 #============================================
 #              training
 #============================================
+import feature_net_test
 
 loss_record = []
 every_loss = []
 epoch_loss = []
-
+epoch_accu = []
 
 model.train()
 for epo in range(epoch):
@@ -148,7 +149,8 @@ for epo in range(epoch):
         
     epoch_loss.append(np.mean(every_loss))
     every_loss = []
-
+    accuracy = test(model)
+    epoch_accu.append(accuracy)
             
             
 torch.save(model.state_dict(), '/home/tk/Documents/FeatureNet.pkl')
@@ -165,5 +167,12 @@ plt.figure(figsize = (20, 10))
 plt.plot(epoch_loss)
 plt.xlabel('iterations')
 plt.ylabel('epoch_loss')
-plt.savefig('epoch_loss')
+plt.savefig('epoch_loss.png')
+plt.show()
+
+plt.figure(figsize = (20, 10))
+plt.plot(epoch_accu)
+plt.xlabel('iterations')
+plt.ylabel('accu')
+plt.savefig('accuracy.png')
 plt.show()

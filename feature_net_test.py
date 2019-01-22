@@ -121,43 +121,47 @@ optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
 #              testing
 #============================================
 
-loss_record = []
-every_loss = []
-epoch_loss = []
-correct = 0
-total = 0
-blank = []
-
-model.eval()
-
-with torch.no_grad():       
-    for i, data in enumerate(testloader, 0):
-        inputs, labels = data
-        outputs = model(inputs)
-        labels = labels.to(dtype=torch.long)
-
-        loss = criterion(outputs, labels)
-        
-        _, predicted = torch.max(outputs, 1)
-        
-        total += labels.size(0)
-        
-        correct += (predicted == labels).sum()
-        print ("correct = ", correct, 'total =', total)
-        
-        accuracy = 100 * correct/ total
-        loss_record.append(loss.item())
-        every_loss.append(loss.item())
-        print ('[%d, %5d] loss: %.3f, acc: %.3f' % (epoch, i, loss.item(), accuracy))
-        
-    epoch_loss.append(np.mean(every_loss))
+def test(model):
+    loss_record = []
     every_loss = []
-
+    epoch_loss = []
+    correct = 0
+    total = 0
+    blank = []
+    
+    model.eval()
+    
+    with torch.no_grad():       
+        for i, data in enumerate(testloader, 0):
+            inputs, labels = data
+            outputs = model(inputs)
+            labels = labels.to(dtype=torch.long)
+    
+            loss = criterion(outputs, labels)
             
+            _, predicted = torch.max(outputs, 1)
+            
+            total += labels.size(0)
+            
+            correct += (predicted == labels).sum()
+            print ("correct = ", correct, 'total =', total)
+            
+            accuracy = 100 * correct/ total
+            loss_record.append(loss.item())
+            every_loss.append(loss.item())
+            print ('[%d, %5d] loss: %.3f, acc: %.3f' % (epoch, i, loss.item(), accuracy))
+            
+        epoch_loss.append(np.mean(every_loss))
+        every_loss = []
+
+    return (float)(correct) / total
+
+test(model)
            
 plt.figure(figsize = (20, 10))
 plt.plot(loss_record)
 plt.xlabel('iterations')
 plt.ylabel('loss')
 plt.savefig('loss.png')
-plt.show()
+plt.close()
+# plt.show()
