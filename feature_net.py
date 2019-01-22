@@ -49,19 +49,17 @@ cleanlabelfolder.sort()
 
 class featureDataSet(Dataset):
     def __init__(self):
-        self.curr_json_index = 0
+        self.curr_json_index = -1
 
-        f = open(clean_dir + '{}'.format(cleanfolder[self.curr_json_index]))
-        self.spec = torch.Tensor(json.load(f)) 
-        f = open(clean_label_dir + '{}'.format(cleanlabelfolder[self.curr_json_index]))
-        self.label = torch.Tensor(json.load(f))
+        self.spec = None
+        self.label = None
 
     def __len__(self):
         return SAMPLES_PER_JSON * len(cleanfolder)
 
     def __getitem__(self, index):
         # print("__getitem__: " + str(index))
-        
+
         newest_json_index = index // SAMPLES_PER_JSON
         offset_in_json = index % SAMPLES_PER_JSON
         
@@ -84,7 +82,7 @@ class featureDataSet(Dataset):
 featureset = featureDataSet()
 trainloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
-                                                shuffle = True)
+                                                shuffle = False)
 
 #=================================================    
 #           model 
