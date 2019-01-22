@@ -24,7 +24,7 @@ import cv2
 #=============================================
 
 epoch = 200
-lr = 0.01
+lr = 0.001
 mom = 0.9
 bs = 1
 
@@ -69,9 +69,9 @@ if server == True:
 
 
 clean_dir = root_dir + 'mix_pool/feature/' 
-mix_dir = root_dir + 'mix_pool/mix_spec/' # 10-people mix
-target_spec_dir = root_dir + 'mix_pool/target_spec/' 
-target_label_dir = root_dir + 'mix_pool/target_label/'
+mix_dir = root_dir + 'mix_pool/two_mix_spec/mix_spec/' # 2-people mix
+target_spec_dir = root_dir + 'mix_pool/two_mix_spec/target_spec/' 
+target_label_dir = root_dir + 'mix_pool/two_mix_spec/label/'
 
 full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
       'constructivebeekeeping',
@@ -580,8 +580,8 @@ class ResDAE(nn.Module):
         return y
 
 Res_model = ResDAE()
-Res_model = torch.load(root_dir + 'DAE_SSIM.pkl')
-# Res_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/res.pkl'))
+# Res_model = torch.load(root_dir + 'cocktail/autoencoder/DAE.pkl')
+Res_model.load_state_dict(torch.load(root_dir + 'cocktail/autoencoder/DAE.pkl'))
 
 
 # print (model)
@@ -619,10 +619,6 @@ for epo in range(epoch):
         inputs = Variable(mix_spec)
         targets = target_spec
         
-        optimizer.zero_grad()
-        optimizer_A.zero_grad()
-
-        
         # get feature
         featureset = featureDataSet(clean_dir, int(target_label))
         feat_data, index = featureset.__getitem__()  
@@ -641,48 +637,48 @@ for epo in range(epoch):
         loss = criterion(outputs, target)
 
         loss.backward()
+ 
         optimizer.step()
         optimizer_A.step()
+        optimizer.zero_grad()
+        optimizer_A.zero_grad()
+
 
         
         loss_record.append(loss.item())
         print ('[%d, %2d] loss: %.3f' % (epo, i, loss.item()))
     
-        if i % 100 == 0:
+        if i % 20 == 0:
 
             inn = inputs.view(256, 128).detach().numpy() * 255
-            np.clip(inn, np.min(inn), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/' + str(epo) +'_'+ str(i)  + "_mix.png", inn)
+#            np.clip(inn, np.min(inn), 1)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/2people/' + str(epo) +'_'+ str(i)  + "_mix.png", inn)
 
             tarr = target.view(256, 128).detach().numpy() * 255
-            np.clip(tarr, np.min(tarr), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/' + str(epo) +'_'+ str(i)  + "_tar.png", tarr)
+#            np.clip(tarr, np.min(tarr), 1)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/2people/' + str(epo) +'_'+ str(i)  + "_tar.png", tarr)
 
             outt = outputs.view(256, 128).detach().numpy() * 255
-            np.clip(outt, np.min(outt), 1)
-            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/' + str(epo) +'_'+ str(i)  + "_sep.png", outt)
+#            np.clip(outt, np.min(outt), 1)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/L2/2people/' + str(epo) +'_'+ str(i)  + "_out.png", outt)
 
             plt.figure(figsize = (20, 10))
             plt.plot(loss_record)
             plt.xlabel('iterations')
             plt.ylabel('loss')
-            plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/L2/loss_L2.png')
+            plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/L2/2people/loss_L2.png')
             
-#            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
-   
-    gc.collect()
-    plt.close("all")
 
-
-
+            gc.collect()
+            plt.close("all")   
     
 #=============================================
 #        Save Model & Loss
 #=============================================
 
-torch.save(Res_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/res.pkl')
-torch.save(A_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/A.pkl')
-torch.save(featurenet.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/feat.pkl')
+torch.save(Res_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/2people/res.pkl')
+torch.save(A_model.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/2people/A.pkl')
+torch.save(featurenet.state_dict(), root_dir + 'cocktail/combinemodel_fullconv/L2/2people/feat.pkl')
 
 
 
