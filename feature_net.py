@@ -123,6 +123,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
 #              training
 #============================================
 import feature_net_test
+from feature_net_test import test as test
 
 loss_record = []
 every_loss = []
