@@ -51,9 +51,10 @@ class featureDataSet(Dataset):
     def __init__(self):
         self.curr_json_index = 0
 
-        self.spec  = None
-
-        self.label = None
+        f = open(clean_dir + '{}'.format(cleanfolder[self.curr_json_index]))
+        self.spec = torch.Tensor(json.load(f)) 
+        f = open(clean_label_dir + '{}'.format(cleanlabelfolder[self.curr_json_index]))
+        self.label = torch.Tensor(json.load(f))
 
     def __len__(self):
         if self.spec == None:
