@@ -32,24 +32,22 @@ clean_dir = '/home/tk/Documents/clean_test/'
 clean_label_dir = '/home/tk/Documents/clean_labels_test/' 
 #========================================
 
-cleanfolder = os.listdir(clean_dir)
-cleanfolder.sort()
-
-cleanlabelfolder = os.listdir(clean_label_dir)
-cleanlabelfolder.sort()
-
-clean_list = []
-clean_label_list = []
-
 #========================================
-
 class featureDataSet(Dataset):
     def __init__(self, clean_dir, clean_label_dir):
-                
+        cleanfolder = os.listdir(clean_dir)
+        cleanfolder.sort()
+
+        cleanlabelfolder = os.listdir(clean_label_dir)
+        cleanlabelfolder.sort()
+
+        clean_list = []
+        clean_label_list = []
+
         for i in cleanfolder:
             with open(clean_dir + '{}'.format(i)) as f:
                 clean_list.append(torch.Tensor(json.load(f)))
-                
+
         for i in cleanlabelfolder:
             with open(clean_label_dir + '{}'.format(i)) as f:
                 clean_label_list.append(torch.Tensor(json.load(f)))
@@ -66,20 +64,11 @@ class featureDataSet(Dataset):
 
                 
     def __getitem__(self, index): 
-
         spec = self.spec[index]
         label = self.label[index]
         return spec, label
 
     
-#=================================================    
-#           Dataloader 
-#=================================================
-featureset = featureDataSet(clean_dir, clean_label_dir)
-testloader = torch.utils.data.DataLoader(dataset = featureset,
-                                                batch_size = bs,
-                                                shuffle = True)
-
 #=================================================    
 #           model 
 #=================================================
@@ -106,58 +95,70 @@ class featureNet(nn.Module):
         x = self.fc3(x)
         
         return F.log_softmax(x, dim = 1)
-    
-model = featureNet()
-model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
-print (model)
+
 
 #============================================
 #              optimizer
 #============================================
-criterion = torch.nn.NLLLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
+
+#=================================================    
+#           Dataloader 
+#=================================================
+featureset = featureDataSet(clean_dir, clean_label_dir)
+testloader = torch.utils.data.DataLoader(dataset = featureset,
+                                                batch_size = bs,
+                                                shuffle = True)
 
 #============================================
-#              training
+#              testing
 #============================================
 
-loss_record = []
-every_loss = []
-epoch_loss = []
-correct = 0
-total = 0
-blank = []
+def test(model):
+    criterion = torch.nn.NLLLoss()
 
-model.eval()
-
-with torch.no_grad():       
-    for i, data in enumerate(testloader, 0):
-        inputs, labels = data
-        outputs = model(inputs)
-        labels = labels.to(dtype=torch.long)
-
-        loss = criterion(outputs, labels)
-        
-        _, predicted = torch.max(outputs, 1)
-        
-        total += labels.size(0)
-        
-        correct += (predicted == labels).sum()
-        print ("correct = ", correct, 'total =', total)
-        
-        accuracy = 100 * correct/ total
-        loss_record.append(loss.item())
-        every_loss.append(loss.item())
-        print ('[%d, %5d] loss: %.3f, acc: %.3f' % (epoch, i, loss.item(), accuracy))
-        
-    epoch_loss.append(np.mean(every_loss))
+    loss_record = []
     every_loss = []
-
+    epoch_loss = []
+    correct = 0
+    total = 0
+    blank = []
+    
+    model.eval()
+    
+    with torch.no_grad():       
+        for i, data in enumerate(testloader, 0):
+            inputs, labels = data
+            outputs = model(inputs)
+            labels = labels.to(dtype=torch.long)
+    
+            loss = criterion(outputs, labels)
             
-           
-plt.figure(figsize = (20, 10))
-plt.plot(loss_record)
-plt.xlabel('iterations')
-plt.ylabel('loss')
-plt.savefig('loss.png')
-plt.show()
+            _, predicted = torch.max(outputs, 1)
+            
+            total += labels.size(0)
+            
+            correct += (predicted == labels).sum()
+            print ("correct = ", correct, 'total =', total)
+            
+            accuracy = 100 * correct/ total
+            loss_record.append(loss.item())
+            every_loss.append(loss.item())
+            print ('[%d, %5d] loss: %.3f, acc: %.3f' % (epoch, i, loss.item(), accuracy))
+            
+        epoch_loss.append(np.mean(every_loss))
+        every_loss = []
+
+        plt.figure(figsize = (20, 10))
+        plt.plot(loss_record)
+        plt.xlabel('iterations')
+        plt.ylabel('loss')
+        plt.savefig('loss.png')
+        plt.close()
+
+    return (float)(correct) / total
+
+if __name__ == '__main__':
+    model_for_test = featureNet()
+    model_for_test.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
+    print(model_for_test)
+    test(model)

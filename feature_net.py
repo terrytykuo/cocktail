@@ -29,9 +29,11 @@ lr = 0.001
 mom = 0.8
 bs = 10
 
+SAMPLES_PER_JSON = 200
+
 #======================================
-clean_dir = '/home/tk/Documents/clean/second_part/' 
-clean_label_dir = '/home/tk/Documents/clean_labels/second_part/' 
+clean_dir = '/home/tk/Documents/clean/' 
+clean_label_dir = '/home/tk/Documents/clean_labels/' 
 #========================================
 
 cleanfolder = os.listdir(clean_dir)
@@ -40,47 +42,47 @@ cleanfolder.sort()
 cleanlabelfolder = os.listdir(clean_label_dir)
 cleanlabelfolder.sort()
 
-clean_list = []
-clean_label_list = []
+# clean_list = []
+# clean_label_list = []
 
 #========================================
 
 class featureDataSet(Dataset):
-    def __init__(self, clean_dir, clean_label_dir):
-                
-        for i in cleanfolder:
-            with open(clean_dir + '{}'.format(i)) as f:
-                clean_list.append(torch.Tensor(json.load(f)))
-                
-        for i in cleanlabelfolder:
-            with open(clean_label_dir + '{}'.format(i)) as f:
-                clean_label_list.append(torch.Tensor(json.load(f)))
-        
-        cleanblock = torch.cat(clean_list, 0)
-        self.spec = torch.cat([cleanblock], 0)
-                
-        cleanlabel = torch.cat(clean_label_list, 0)
-        self.label = torch.cat([cleanlabel], 0)
+    def __init__(self):
+        self.curr_json_index = -1
 
-        
+        self.spec = None
+        self.label = None
+
     def __len__(self):
-        return self.spec.shape[0]
+        return SAMPLES_PER_JSON * len(cleanfolder)
 
-                
-    def __getitem__(self, index): 
+    def __getitem__(self, index):
+        # print("__getitem__: " + str(index))
 
-        spec = self.spec[index]
-        label = self.label[index]
+        newest_json_index = index // SAMPLES_PER_JSON
+        offset_in_json = index % SAMPLES_PER_JSON
+        
+        if not (self.curr_json_index == newest_json_index):
+            self.curr_json_index = newest_json_index
+
+            f = open(clean_dir + '{}'.format(cleanfolder[newest_json_index]))
+            self.spec = torch.Tensor(json.load(f)) 
+            f = open(clean_label_dir + '{}'.format(cleanlabelfolder[newest_json_index]))
+            self.label = torch.Tensor(json.load(f))
+
+        spec = self.spec[offset_in_json]
+        label = self.label[offset_in_json]
         return spec, label
 
     
 #=================================================    
 #           Dataloader 
 #=================================================
-featureset = featureDataSet(clean_dir, clean_label_dir)
+featureset = featureDataSet()
 trainloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
-                                                shuffle = True)
+                                                shuffle = False)
 
 #=================================================    
 #           model 
@@ -96,7 +98,6 @@ class featureNet(nn.Module):
         self.fc2 = nn.Linear(512, 256)
         self.fc3 = nn.Linear(256, 10)
 
-        
     def forward(self, x):
         x = x.view(bs, 1 ,256, 128)
         x = F.relu(self.maxpool(self.conv1(x)))
@@ -106,7 +107,7 @@ class featureNet(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
-        
+
         return F.log_softmax(x, dim = 1)
     
 model = featureNet()
@@ -122,11 +123,12 @@ optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = mom)
 #============================================
 #              training
 #============================================
+import feature_net_test
 
 loss_record = []
 every_loss = []
 epoch_loss = []
-
+epoch_accu = []
 
 model.train()
 for epo in range(epoch):
@@ -148,7 +150,8 @@ for epo in range(epoch):
         
     epoch_loss.append(np.mean(every_loss))
     every_loss = []
-
+    accuracy = test(model)
+    epoch_accu.append(accuracy)
             
             
 torch.save(model.state_dict(), '/home/tk/Documents/FeatureNet.pkl')
@@ -165,5 +168,12 @@ plt.figure(figsize = (20, 10))
 plt.plot(epoch_loss)
 plt.xlabel('iterations')
 plt.ylabel('epoch_loss')
-plt.savefig('epoch_loss')
+plt.savefig('epoch_loss.png')
+plt.show()
+
+plt.figure(figsize = (20, 10))
+plt.plot(epoch_accu)
+plt.xlabel('iterations')
+plt.ylabel('accu')
+plt.savefig('accuracy.png')
 plt.show()
