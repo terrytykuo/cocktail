@@ -3,7 +3,8 @@ import json
 
 
 
-clean_dir = root_dir + 'clean/'
+
+clean_dir = '/home/tk/Documents/clean/'
 cleanfolder = os.listdir(clean_dir)
 
 for i in cleanfolder:
