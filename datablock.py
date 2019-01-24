@@ -11,7 +11,7 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
 
 
 
-clean_dir = '/home/tk/Documents/clean/temp/'
+clean_dir = '/home/tk/Documents/clean/'
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
 
