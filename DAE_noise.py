@@ -86,9 +86,9 @@ class MSourceDataSet(Dataset):
        noise_list = []
 
                     
-        for i in noisefolder:
-            with open(clean_dir + '{}'.format(i)) as f:
-                noise_list.append(torch.Tensor(json.load(f)))
+       for i in noisefolder:
+       	    with open(clean_dir + '{}'.format(i)) as f:
+            noise_list.append(torch.Tensor(json.load(f)))
         
         
         cleanblock = torch.cat(noise_list, 0)
