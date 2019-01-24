@@ -15,18 +15,20 @@ clean_dir = '/home/tk/Documents/clean/'
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
 
-clean_list = []
-file_list = []
-
 for count in [1,2,3,4,5,6,7,8,9]:
+
+	file_list = []
+	clean_list = []
+
 	for i in full_audio:
 		file_name = str(i) + str(count) + '.json'
 		print (file_name)
 		file_list.append((json.load(f)))
 
 	for j in file_list:
-		with open(clean_dir + '{}'.format(j)) as f:
-			clean_list.append((json.load(f)))
+		print (j)
+		with open(clean_dir + '{}'.format(j)) as jh:
+			clean_list.append((json.load(jh)))
 
 
 	cleanblock = np.stack(clean_list)
@@ -34,4 +36,5 @@ for count in [1,2,3,4,5,6,7,8,9]:
 
 	with open('/home/tk/Documents/clean/' + 'datablock' + count + '.json', 'w') as jh:
 		json.dump(cleanblock.tolist(), jh)
+
 
