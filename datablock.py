@@ -11,24 +11,22 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
 
 
 
-clean_dir = '/home/tk/Documents/clean/'
+clean_dir = '/home/tk/Documents/clean/temp/'
 cleanfolder = os.listdir(clean_dir)
+cleanfolder.sort()
 
 clean_list = []
-for count in [0,1,2,3,4,5,6,7,8,9]:
-	for name in full_audio:
-		file_name = '{}{}.json'.format(name, count)
-		cleanfolder.append(file_name)
 
-	for j in cleanfolder:
-		print (j)
-		with open(clean_dir + '{}'.format(j)) as f:
-			clean_list.append((json.load(f)))
+
+for j in cleanfolder:
+	print (j)
+	with open(clean_dir + '{}'.format(j)) as f:
+		clean_list.append((json.load(f)))
 
 
 	cleanblock = np.stack(clean_list)
 	print (cleanblock.shape)
 
-	with open(clean_dir + 'datablock' + str(count) + '.json', 'w') as jh:
+	with open(clean_dir + 'temp/datablock' + '0.json', 'w') as jh:
 	    json.dump(cleanblock.tolist(), jh)
 
