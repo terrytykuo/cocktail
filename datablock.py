@@ -16,6 +16,7 @@ cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
 
 clean_list = []
+file_list = []
 
 for count in [1,2,3,4,5,6,7,8,9]:
 	for i in full_audio:
