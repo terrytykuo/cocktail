@@ -8,7 +8,7 @@ cleanfolder = os.listdir(clean_dir)
 
 for i in cleanfolder:
 	with open(clean_dir + '{}'.format(i)) as f:
-    	clean_list.append((json.load(f)))
+		clean_list.append((json.load(f)))
 
 
 cleanblock = np.stack(clean_list)
