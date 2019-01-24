@@ -107,7 +107,7 @@ class featureNet(nn.Module):
 featureset = featureDataSet()
 testloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
-                                                shuffle = True)
+                                                shuffle = False)
 
 #============================================
 #              testing
