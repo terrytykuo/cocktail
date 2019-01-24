@@ -80,7 +80,7 @@ for i in range(blocks):
         print ("name = ", name , ", shape = ", all_clean_spec.shape)
 
     
-        with open(mixed_pool_path  + name + '/' + name + str(i) + '.json', 'w') as jh:
+        with open(mixed_pool_path  + name + str(i) + '.json', 'w') as jh:
             json.dump(all_clean_spec.tolist(), jh)
 
 
