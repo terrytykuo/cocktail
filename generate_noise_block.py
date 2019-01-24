@@ -8,15 +8,48 @@ root_dir = '/home/tk/Documents/'
 sliced_pool_path = '/home/tk/Documents/sliced_pool/'
 mixed_pool_path =  '/home/tk/Documents/mix_pool/'
 
-full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
-              'constructivebeekeeping',
-              'discoursesbiologicalgeological_16_huxley_12', 
-              'natureguide', 'pioneersoftheoldsouth', 
-              'pioneerworkalps_02_harper_12', 
-              'romancecommonplace', 'travelstoriesretold']
+full_audio = ['birdstudybook'],
+             # 'captaincook', 'cloudstudies_02_clayden_12', 
+             #  'constructivebeekeeping',
+             #  'discoursesbiologicalgeological_16_huxley_12', 
+             #  'natureguide', 'pioneersoftheoldsouth', 
+             #  'pioneerworkalps_02_harper_12', 
+             #  'romancecommonplace', 'travelstoriesretold']
               
               
-blocks = 11
+blocks = 1
+target_snr = 1
+noise_type = 'white'
+
+# gen_spectrogram
+def gen_noise_spectrogram(wav, target_snr, noise_type):
+    
+    import matplotlib.pyplot as plt
+    import gc    
+    
+    fs, x = scipy.io.wavfile.read(wav) # read audio file as np array
+    spec, _, _, _= plt.specgram(x, Fs=fs, NFFT=2048, noverlap=1900)
+    plt.close('all')
+    gc.collect()
+
+    freq_wid = 342
+    spec = spec[:freq_wid, :]
+
+    spec_ = spec[:256, :128]
+    mean = np.mean(spec_)
+    spec_ = spec_/ mean
+    spec_[spec_ >= 1] = 1
+
+    if noise_type == 'white':
+        noise = acoustics.generator.white(256*128).reshape(256, 128)
+    
+    if noise_type == 'pink':
+        noise = acoustics.generator.pink(256*128).reshape(256, 128)
+
+    current_snr = (np.mean(spec_))/ np.std(noise)
+    noise = noise * (current_snr/ target_snr)
+    return spec_ + noise
+
 
 for i in range(blocks):
     for ind, name in enumerate(full_audio):
@@ -36,7 +69,7 @@ for i in range(blocks):
         
 
         for k in file_name:
-            spec = gen_spectrogram(sliced_pool_path + name + '/clean/' + k)
+            spec = gen_spectrogram(sliced_pool_path + name + '/clean/' + k, target_snr, noise_type)
             print (k)
             all_clean_spec.append(spec)
             all_clean_label.append(ind)
