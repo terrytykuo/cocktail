@@ -2,6 +2,8 @@ import numpy as np
 import os
 from data_process import gen_spectrogram
 import json
+import imageio
+import acoustics
 
 
 root_dir = '/home/tk/Documents/'
