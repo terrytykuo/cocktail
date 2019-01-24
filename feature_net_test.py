@@ -34,38 +34,30 @@ clean_label_dir = '/home/tk/Documents/clean_labels_test/'
 
 #========================================
 class featureDataSet(Dataset):
-    def __init__(self, clean_dir, clean_label_dir):
-        cleanfolder = os.listdir(clean_dir)
-        cleanfolder.sort()
+    def __init__(self):
+        self.curr_json_index = -1
 
-        cleanlabelfolder = os.listdir(clean_label_dir)
-        cleanlabelfolder.sort()
+        self.spec = None
+        self.label = None
 
-        clean_list = []
-        clean_label_list = []
-
-        for i in cleanfolder:
-            with open(clean_dir + '{}'.format(i)) as f:
-                clean_list.append(torch.Tensor(json.load(f)))
-
-        for i in cleanlabelfolder:
-            with open(clean_label_dir + '{}'.format(i)) as f:
-                clean_label_list.append(torch.Tensor(json.load(f)))
-        
-        cleanblock = torch.cat(clean_list, 0)
-        self.spec = torch.cat([cleanblock], 0)
-                
-        cleanlabel = torch.cat(clean_label_list, 0)
-        self.label = torch.cat([cleanlabel], 0)
-
-        
     def __len__(self):
-        return self.spec.shape[0]
+        return SAMPLES_PER_JSON * len(cleanfolder)
 
-                
-    def __getitem__(self, index): 
-        spec = self.spec[index]
-        label = self.label[index]
+    def __getitem__(self, index):
+
+        newest_json_index = index // SAMPLES_PER_JSON
+        offset_in_json = index % SAMPLES_PER_JSON
+        
+        if not (self.curr_json_index == newest_json_index):
+            self.curr_json_index = newest_json_index
+
+            f = open(clean_dir + '{}'.format(cleanfolder[newest_json_index]))
+            self.spec = torch.Tensor(json.load(f)) 
+            f = open(clean_label_dir + '{}'.format(cleanlabelfolder[newest_json_index]))
+            self.label = torch.Tensor(json.load(f))
+
+        spec = self.spec[offset_in_json]
+        label = self.label[offset_in_json]
         return spec, label
 
     
