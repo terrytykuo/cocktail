@@ -148,7 +148,7 @@ class featureNet(nn.Module):
         self.maxpool4 = nn.MaxPool2d(kernel_size=2)
         self.batchnorm4 = nn.BatchNorm2d(16)
 
-        self.fc1 = nn.Linear(16*8*8, 512)
+        self.fc1 = nn.Linear(16*8*16, 512)
         self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
@@ -162,7 +162,7 @@ class featureNet(nn.Module):
         x = self.maxpool3(x)
         x = F.relu(self.conv4(x))
         x = self.maxpool4(x)
-        x = x.reshape(bs, 16*8*8)
+        x = x.reshape(bs, 16*8*16)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
 
