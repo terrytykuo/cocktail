@@ -27,6 +27,8 @@ lr = 0.001
 mom = 0.9
 bs = 10
 
+SAMPLES_PER_JSON = 200
+
 #======================================
 clean_dir = '/home/tk/Documents/clean_test/' 
 clean_label_dir = '/home/tk/Documents/clean_labels_test/' 
