@@ -4,7 +4,8 @@ from data_process import gen_spectrogram
 import json
 import imageio
 import acoustics
-
+import scipy
+import scipy.io.wavfile
 
 root_dir = '/home/tk/Documents/'
 sliced_pool_path = '/home/tk/Documents/sliced_pool/'
