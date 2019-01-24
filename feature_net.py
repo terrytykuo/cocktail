@@ -43,7 +43,7 @@ cleanlabelfolder = os.listdir(clean_label_dir)
 cleanlabelfolder.sort()
 
 #========================================
-'''
+
 class featureDataSet(Dataset):
     def __init__(self):
         self.curr_json_index = -1
@@ -70,9 +70,9 @@ class featureDataSet(Dataset):
         spec = self.spec[offset_in_json]
         label = self.label[offset_in_json]
         return spec, label
+
+
 '''
-
-
 class featureDataSet(Dataset):
     def __init__(self, clean_dir, clean_label_dir):
 
@@ -105,12 +105,12 @@ class featureDataSet(Dataset):
         spec = self.spec[index]
         label = self.label[index]
         return spec, label
-
+'''
 
 #=================================================    
 #           Dataloader 
 #=================================================
-featureset  = featureDataSet(clean_dir, clean_label_dir)
+featureset  = featureDataSet()
 trainloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
                                                 shuffle = True) # must be False for efficiency
