@@ -168,7 +168,10 @@ class featureNet(nn.Module):
         return F.log_softmax(x, dim = 1)
     
 model = featureNet()
-model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
+try:
+    model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
+except:
+    print("model not available")
 print (model)
 
 #============================================
