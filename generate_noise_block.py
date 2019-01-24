@@ -12,7 +12,7 @@ sliced_pool_path = '/home/tk/Documents/sliced_pool/'
 mixed_pool_path =  '/home/tk/Documents/noise_block/white_noise/'
 
 full_audio = ['birdstudybook',
-              'captaincook'
+              'captaincook',
               'cloudstudies_02_clayden_12', 
               'constructivebeekeeping',
               'discoursesbiologicalgeological_16_huxley_12', 
