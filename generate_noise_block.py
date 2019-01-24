@@ -64,7 +64,7 @@ for i in range(blocks):
             os.mkdir(mixed_pool_path + 'feature/' + name)
 
         file_name_list = os.listdir(sliced_pool_path + name + '/clean/')
-        file_name = np.random.choice(file_name_list, 1000)
+        file_name = np.random.choice(file_name_list, 100)
         
 
         for k in file_name:
