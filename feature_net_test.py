@@ -96,7 +96,7 @@ class featureNet(nn.Module):
 #=================================================    
 #           Dataloader 
 #=================================================
-featureset = featureDataSet(clean_dir, clean_label_dir)
+featureset = featureDataSet()
 testloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
                                                 shuffle = True)
