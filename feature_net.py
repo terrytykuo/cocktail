@@ -162,6 +162,7 @@ class featureNet(nn.Module):
         x = self.maxpool3(x)
         x = F.relu(self.conv4(x))
         x = self.maxpool4(x)
+        x = x.reshape(bs, 16*8*8)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
 
