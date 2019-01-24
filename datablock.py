@@ -27,6 +27,6 @@ for j in cleanfolder:
 cleanblock = np.stack(clean_list)
 print (cleanblock.shape)
 
-	with open(clean_dir + 'datablock' + '0.json', 'w') as jh:
-	    json.dump(cleanblock.tolist(), jh)
+with open(clean_dir + 'datablock' + '0.json', 'w') as jh:
+	json.dump(cleanblock.tolist(), jh)
 
