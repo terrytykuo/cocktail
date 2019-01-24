@@ -37,7 +37,7 @@ for count in [1,2,3,4,5,6,7,8,9]:
 	with open('/home/tk/Documents/ok/' + 'datablock' + str(count) + '.json', 'w') as jh:
 		json.dump(cleanblock.tolist(), jh)
 
-	# for k in file_list:
-	# 	os.remove(k)
+	for k in file_list:
+	 	os.remove('/home/tk/Documents/clean/' + k)
 
 
