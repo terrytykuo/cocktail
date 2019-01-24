@@ -67,7 +67,7 @@ for i in range(blocks):
         
 
         for k in file_name:
-            spec = gen_spectrogram(sliced_pool_path + name + '/clean/' + k, target_snr, noise_type)
+            spec = gen_noise_spectrogram(sliced_pool_path + name + '/clean/' + k, target_snr, noise_type)
             print (k)
             all_clean_spec.append(spec)
             print (ind)
