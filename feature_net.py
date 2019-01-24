@@ -43,7 +43,7 @@ cleanlabelfolder = os.listdir(clean_label_dir)
 cleanlabelfolder.sort()
 
 #========================================
-
+'''
 class featureDataSet(Dataset):
     def __init__(self):
         self.curr_json_index = -1
@@ -70,15 +70,50 @@ class featureDataSet(Dataset):
         spec = self.spec[offset_in_json]
         label = self.label[offset_in_json]
         return spec, label
+'''
 
-    
+
+class featureDataSet(Dataset):
+    def __init__(self, clean_dir, clean_label_dir):
+
+        clean_list = []
+        clean_label_list = []
+                    
+        for i in cleanfolder:
+       	    with open(clean_dir + '{}'.format(i)) as f:
+            	clean_list.append(torch.Tensor(json.load(f)))
+        
+        for i in cleanlabelfolder:
+            with open(clean_label_dir + '{}'.format(i)) as f:
+                clean_label_list.append(torch.Tensor(json.load(f)))
+        
+        cleanblock = torch.cat(clean_list, 0)
+        cleanlabelblock = torch.cat(clean_label_list, 0)
+
+        self.spec = cleanblock
+        self.label = cleanlabelblock
+        
+        del clean_list
+        del clean_label_list
+        
+    def __len__(self):
+        return self.spec.shape[0]
+
+                
+    def __getitem__(self, index): 
+
+        spec = self.spec[index]
+        label = self.label[index]
+        return spec, label
+
+
 #=================================================    
 #           Dataloader 
 #=================================================
-featureset  = featureDataSet()
+featureset  = featureDataSet(clean_dir, clean_label_dir)
 trainloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
-                                                shuffle = False) # must be False for efficiency
+                                                shuffle = True) # must be False for efficiency
 
 #=================================================    
 #           model 
@@ -233,9 +268,9 @@ plt.ylabel('epoch_loss')
 plt.savefig('epoch_loss.png')
 plt.show()
 
-plt.figure(figsize = (20, 10))
-plt.plot(epoch_accu)
-plt.xlabel('iterations')
-plt.ylabel('accu')
-plt.savefig('accuracy.png')
-plt.show()
+#plt.figure(figsize = (20, 10))
+#plt.plot(epoch_accu)
+#plt.xlabel('iterations')
+#plt.ylabel('accu')
+#plt.savefig('accuracy.png')
+#plt.show()
