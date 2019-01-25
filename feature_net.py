@@ -27,7 +27,7 @@ random.seed(7)
 epoch = 5
 lr = 0.01
 mom = 0.8
-bs = 10
+bs = 5
 
 ENTRIES_PER_JSON = 100
 CLASSES = 10
