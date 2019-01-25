@@ -27,9 +27,9 @@ random.seed(7)
 epoch = 5
 lr = 0.001
 mom = 0.8
-bs = 10
+bs = 1
 
-SAMPLES_PER_JSON = 200
+SAMPLES_PER_JSON = 1000
 
 #======================================
 clean_dir = '/home/tk/Documents/clean/' 
@@ -43,7 +43,7 @@ cleanlabelfolder = os.listdir(clean_label_dir)
 cleanlabelfolder.sort()
 
 #========================================
-'''
+
 class featureDataSet(Dataset):
     def __init__(self):
         self.curr_json_index = -1
@@ -55,37 +55,41 @@ class featureDataSet(Dataset):
         return SAMPLES_PER_JSON * len(cleanfolder)
 
     def __getitem__(self, index):
-
+        label_list = []
         newest_json_index = index // SAMPLES_PER_JSON
         offset_in_json = index % SAMPLES_PER_JSON
         
         if not (self.curr_json_index == newest_json_index):
             self.curr_json_index = newest_json_index
 
-            f = open(clean_dir + '{}'.format(cleanfolder[newest_json_index]))
-            self.spec = torch.Tensor(json.load(f)) 
-            f = open(clean_label_dir + '{}'.format(cleanlabelfolder[newest_json_index]))
-            self.label = torch.Tensor(json.load(f))
+            with open(clean_dir + '{}'.format(cleanfolder[newest_json_index])):
+                self.spec = torch.Tensor(json.load(f))
+                label_list.append([[0],[1],[2], [3], [4], [5], [6], [7], [8], [9]])
+                
 
+        self.spec = np.transpose(self.spec, (1,0,2,3))
+        self.spec = np.vstack(self.spec)
+            
+        self.label = np.hstack(self.label)
+        
         spec = self.spec[offset_in_json]
-        label = self.label[offset_in_json]
+        label = label
+        
         return spec, label
-'''
 
 
 class featureDataSet(Dataset):
-    def __init__(self, clean_dir, clean_label_dir):
+    def __init__(self, clean_dir):
 
         clean_list = []
         clean_label_list = []
                     
         for i in cleanfolder:
        	    with open(clean_dir + '{}'.format(i)) as f:
-            	clean_list.append(torch.Tensor(json.load(f)))
+                tensor = torch.Tensor(json.load(f))
+                clean_list.append(tensor)
+                clean_label_list.append([[0],[1],[2],[3],[4],[5],[6],[7],[8],[9]])
         
-        for i in cleanlabelfolder:
-            with open(clean_label_dir + '{}'.format(i)) as f:
-                clean_label_list.append(torch.Tensor(json.load(f)))
         
         cleanblock = torch.cat(clean_list, 0)
         cleanlabelblock = torch.cat(clean_label_list, 0)
@@ -97,7 +101,7 @@ class featureDataSet(Dataset):
         del clean_label_list
         
     def __len__(self):
-        return self.spec.shape[0]
+        return self.spec.shape[1]
 
                 
     def __getitem__(self, index): 
@@ -110,7 +114,7 @@ class featureDataSet(Dataset):
 #=================================================    
 #           Dataloader 
 #=================================================
-featureset  = featureDataSet(clean_dir, clean_label_dir)
+featureset  = featureDataSet(clean_dir)
 trainloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
                                                 shuffle = True) # must be False for efficiency
@@ -187,7 +191,7 @@ class featureNet(nn.Module):
         self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
-        x = x.view(bs, 1 ,256, 128)
+        x = x.view(bs, 100, 256, 128)
         
         x = F.relu(self.conv1(x))
         x = self.maxpool1(x)
