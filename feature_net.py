@@ -71,7 +71,8 @@ class featureDataSet(Dataset):
             self.labels = np.array([np.arange(CLASSES) for _ in range(ENTRIES_PER_JSON)])
             self.labels = np.concatenate(self.labels, axis=0)
 
-            indexes = random.shuffle(np.arange(ENTRIES_PER_JSON * CLASSES))
+            indexes = np.arange(ENTRIES_PER_JSON * CLASSES)
+            random.shuffle(indexes)
             print(self.labels[:50])
             print(indexes[:50])
 
