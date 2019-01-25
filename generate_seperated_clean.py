@@ -19,7 +19,7 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
               
               
 blocks = 10
-datapoints = 200
+datapoints = 100
 
 for i in range(blocks):
     for ind, name in enumerate(full_audio):
@@ -57,10 +57,10 @@ for i in range(blocks):
         print ("label = ", name , ", shape = ", all_clean_label.shape)
 
     
-        with open(mixed_pool_path +  'feature/' + name + '/' + name + str(i) + '.json', 'w') as jh:
+        with open(root_dir + 'clean/' + name + str(i) + '.json', 'w') as jh:
             json.dump(all_clean_spec.tolist(), jh)
 
-        with open(mixed_pool_path +  'feature_label/' + name + '/' + name + str(i) + '.json', 'w') as jh:
+        with open(root_dir + 'clean_labels/' + name + str(i) + '.json', 'w') as jh:
             json.dump(all_clean_label.tolist(), jh)
 
 

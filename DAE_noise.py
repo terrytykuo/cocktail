@@ -19,13 +19,14 @@ import numpy as np
 import gc
 import cv2
 import random
+import imageio
 random.seed(7)
 
 #=============================================
 #        Hyperparameters
 #=============================================
 
-epoch = 2
+epo = 0
 lr = 0.005
 mom = 0.9
 bs = 10
@@ -62,8 +63,10 @@ def white(x):
 #=============================================
 #        path
 #=============================================
-clean_dir = root_dir + 'clean/'
-noise_dir = '/home/tk/Documents/noise_block/white_noise/'
+root_dir = '/home/tk/Documents/'
+
+# clean_dir = root_dir + 'clean/'
+noise_dir = '/home/tk/Documents/noise_block/white/'
 # mix_dir = root_dir + 'mix/' 
 # clean_label_dir = root_dir + 'clean_labels/' 
 # mix_label_dir = root_dir + 'mix_labels/' 
@@ -71,7 +74,6 @@ noise_dir = '/home/tk/Documents/noise_block/white_noise/'
 noisefolder = os.listdir(noise_dir)
 # cleanfolder.sort()
 
-clean_list = []
 # mixfolder = os.listdir(mix_dir)
 # mixfolder.sort()
 
@@ -81,19 +83,19 @@ clean_list = []
 #=============================================
 class MSourceDataSet(Dataset):
     
-    def __init__(self, clean_dir):
+    def __init__(self, noise_dir):
 
         noise_list = []
 
                     
         for i in noisefolder:
-       	    with open(clean_dir + '{}'.format(i)) as f:
+       	    with open(noise_dir + '{}'.format(i)) as f:
             	noise_list.append(torch.Tensor(json.load(f)))
         
         
-        cleanblock = torch.cat(noise_list, 0)
+        noiseblock = torch.cat(noise_list, 0)
 #         mixblock = torch.cat(mix_list, 0)
-        self.spec = cleanblock
+        self.spec = noiseblock
         
         del noise_list
         
@@ -110,9 +112,9 @@ class MSourceDataSet(Dataset):
 #        Define Dataloader
 #=============================================
 
-trainset = MSourceDataSet(noise_dir)
+testset = MSourceDataSet(noise_dir)
 
-trainloader = torch.utils.data.DataLoader(dataset = trainset,
+testloader = torch.utils.data.DataLoader(dataset = testset,
                                                 batch_size = bs,
                                                 shuffle = True)
 
@@ -458,7 +460,7 @@ class ResDAE(nn.Module):
 
 
 model = ResDAE()
-model.load_state_dict(torch.load(root_dir + 'cocktail/autoencoder/DAE.pkl'))
+model.load_state_dict(torch.load(root_dir + 'DAE.pkl'))
 # print (model)
 
 #=============================================
@@ -484,37 +486,36 @@ loss_record = []
 #=============================================
 
 model.eval()
-for epo in range(epoch):
-    for i, data in enumerate(trainloader, 0):
- #       inputs = data
- #       inputs = Variable(inputs)
+for i, data in enumerate(testloader, 0):
+#       inputs = data
+#       inputs = Variable(inputs)
+    top = model.upward(data) #+ white(inputs))
+    outputs = model.downward(top, shortcut = True)
 
-        top = model.upward(data) #+ white(inputs))
-        outputs = model.downward(top, shortcut = True)
-
-        targets = data.view(bs, 1, 256, 128)
-        outputs = outputs.view(bs, 1, 256, 128)
-        loss = criterion(outputs, targets)
+    targets = data.view(bs, 1, 256, 128)
+    outputs = outputs.view(bs, 1, 256, 128)
+    loss = criterion(outputs, targets)
 #        loss = - criterion(outputs, inputs)
 #        ssim_value = - loss.data.item()
-        loss_record.append(loss.item())
+    loss_record.append(loss.item())
 
-        print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
+    print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
 
-        if i % 20 == 0:
-            inn = data[0].view(256, 128).detach().numpy() * 255
-            cv2.imwrite(root_dir + 'cocktail/autoencoder/' + str(epo) + "_" + str(i) + "_clean.png", inn)
-            
-            out = outputs[0].view(256, 128).detach().numpy() * 255
-            cv2.imwrite(root_dir + 'cocktail/autoencoder/' + str(epo) + "_" + str(i) + "_re.png", out)    
-               
-            plt.figure(figsize = (20, 10))
-            plt.plot(loss_record)
-            plt.xlabel('iterations')
-            plt.ylabel('loss')
-            plt.savefig(root_dir + 'cocktail/autoencoder/DAE_loss.png')
-            plt.close("all")
-            gc.collect()
+    if i % 20 == 0:
+
+        inn = data[0].view(256, 128).detach().numpy() * 255
+        imageio.imwrite(root_dir + 'cocktail/autoencoder/' + str(epo) + "_" + str(i) + "_clean.png", inn)
+
+        out = outputs[0].view(256, 128).detach().numpy() * 255
+        imageio.imwrite(root_dir + 'cocktail/autoencoder/' + str(epo) + "_" + str(i) + "_re.png", out)
+
+        plt.figure(figsize = (20, 10))
+        plt.plot(loss_record)
+        plt.xlabel('iterations')
+        plt.ylabel('loss')
+        plt.savefig(root_dir + 'cocktail/autoencoder/DAE_loss.png')
+        plt.close("all")
+        gc.collect()
 
 
 
