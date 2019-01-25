@@ -49,6 +49,7 @@ class featureDataSet(Dataset):
         self.label = None
 
     def __len__(self):
+        print("__len__ = {}".format(SAMPLES_PER_JSON * len(cleanfolder)))
         return SAMPLES_PER_JSON * len(cleanfolder)
 
     def __getitem__(self, index):
@@ -127,7 +128,6 @@ def test(model):
     
     with torch.no_grad():
         for i, data in enumerate(testloader, 0):
-            print(i)
             inputs, labels = data
             outputs = model(inputs)
             labels = labels.to(dtype=torch.long)
