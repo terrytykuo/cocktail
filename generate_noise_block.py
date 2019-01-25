@@ -22,7 +22,7 @@ full_audio = ['birdstudybook',
               
               
 blocks = 1
-target_snr = 1
+target_snr = 0.501187
 noise_type = 'white'
 
 # gen_spectrogram
