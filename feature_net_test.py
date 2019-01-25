@@ -27,17 +27,15 @@ lr = 0.001
 mom = 0.9
 bs = 10
 
-SAMPLES_PER_JSON = 200
+CLASSES = 10
+ENTRIES_PER_JSON = 100
+SAMPLES_PER_JSON = 1000
 
 #======================================
 clean_dir = '/home/tk/Documents/clean_test/' 
-clean_label_dir = '/home/tk/Documents/clean_labels_test/' 
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
-
-cleanlabelfolder = os.listdir(clean_label_dir)
-cleanlabelfolder.sort()
 #========================================
 
 #========================================
@@ -49,7 +47,6 @@ class featureDataSet(Dataset):
         self.label = None
 
     def __len__(self):
-        print("__len__ = {}".format(SAMPLES_PER_JSON * len(cleanfolder)))
         return SAMPLES_PER_JSON * len(cleanfolder)
 
     def __getitem__(self, index):
@@ -61,9 +58,12 @@ class featureDataSet(Dataset):
             self.curr_json_index = newest_json_index
 
             f = open(clean_dir + '{}'.format(cleanfolder[newest_json_index]))
-            self.spec = torch.Tensor(json.load(f)) 
-            f = open(clean_label_dir + '{}'.format(cleanlabelfolder[newest_json_index]))
-            self.label = torch.Tensor(json.load(f))
+            self.spec  = torch.Tensor(
+                np.concatenate(np.array(json.load(f)).transpose(1,0,2,3), axis=0)
+            )
+
+            self.labels = np.array([np.arange(CLASSES) for _ in range(ENTRIES_PER_JSON)])
+            self.labels = torch.Tensor( np.concatenate(self.labels, axis=0) )
 
         spec = self.spec[offset_in_json]
         label = self.label[offset_in_json]
