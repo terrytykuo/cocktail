@@ -219,7 +219,12 @@ for epo in range(epoch):
         optimizer.step()
         loss_record.append(loss.item())
         every_loss.append(loss.item())
-        print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
+        print ('[%d, %5d] loss: %.3f hits: %d/%d' % (
+                epo, i, loss.item(), 
+                np.sum( np.argmax(outputs.detach().numpy(), axis=1) == labels.detach().numpy()),
+                bs
+            )
+        )
 
     epoch_loss.append(np.mean(every_loss))
     every_loss = []
