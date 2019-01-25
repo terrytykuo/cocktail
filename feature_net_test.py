@@ -125,8 +125,9 @@ def test(model):
     
     model.eval()
     
-    with torch.no_grad():       
+    with torch.no_grad():
         for i, data in enumerate(testloader, 0):
+            print(i)
             inputs, labels = data
             outputs = model(inputs)
             labels = labels.to(dtype=torch.long)
