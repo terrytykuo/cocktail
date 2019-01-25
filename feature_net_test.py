@@ -44,7 +44,7 @@ class featureDataSet(Dataset):
         self.curr_json_index = -1
 
         self.spec = None
-        self.label = None
+        self.labels = None
 
     def __len__(self):
         return SAMPLES_PER_JSON * len(cleanfolder)
@@ -66,7 +66,7 @@ class featureDataSet(Dataset):
             self.labels = torch.Tensor( np.concatenate(self.labels, axis=0) )
 
         spec = self.spec[offset_in_json]
-        label = self.label[offset_in_json]
+        label = self.labels[offset_in_json]
         return spec, label
 
     
