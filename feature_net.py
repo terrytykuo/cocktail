@@ -188,7 +188,7 @@ class featureNet(nn.Module):
         )
         self.maxpool7 = nn.MaxPool2d(kernel_size=2)
 
-        self.fc1 = nn.Linear(4096, 512)
+        self.fc1 = nn.Linear(1024, 512)
         self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
