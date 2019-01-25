@@ -70,6 +70,9 @@ class featureDataSet(Dataset):
 
             self.labels = np.array([np.arange(CLASSES) for _ in range(ENTRIES_PER_JSON)])
 
+            print(self.spec.shape)
+            print(self.labels.shape)
+
             indexes = random.shuffle(np.arange(ENTRIES_PER_JSON))
 
             self.spec = torch.Tensor(self.spec[indexes])
