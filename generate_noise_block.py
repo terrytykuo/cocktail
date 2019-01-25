@@ -9,7 +9,7 @@ import scipy.io.wavfile
 
 
 blocks = 1
-target_snr = 0.0.501187 # -3 dB
+target_snr = 0.1258925 # -9 dB
 noise_type = 'pink'
 
 root_dir = '/home/tk/Documents/'
@@ -24,7 +24,7 @@ full_audio = ['birdstudybook',
               'natureguide', 'pioneersoftheoldsouth', 
               'pioneerworkalps_02_harper_12', 
               'romancecommonplace', 'travelstoriesretold']
-
+          
 
 # gen_spectrogram
 def gen_noise_spectrogram(wav, target_snr, noise_type):

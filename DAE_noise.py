@@ -20,6 +20,7 @@ import gc
 import cv2
 import random
 import imageio
+import acoustics
 random.seed(7)
 
 #=============================================
@@ -30,6 +31,8 @@ epo = 0
 lr = 0.005
 mom = 0.9
 bs = 10
+target_snr = 0.251188
+noise_type = 'pink'
 
 #=============================================
 #        Define Functions
@@ -60,13 +63,31 @@ def white(x):
     return second + first
 
 
+def add_noise(data, bs, target_snr, noise_type):
+    
+    if noise_type == 'white':
+        noise = acoustics.generator.white(bs*256*128).reshape(bs, 256, 128)
+    
+    if noise_type == 'pink':
+        noise = acoustics.generator.pink(bs*256*128).reshape(bs, 256, 128)
+    
+    average = np.mean(data[0])
+    std = np.std(noise[0])
+    current_snr = average/std
+    
+    noise = noise * (current_snr/ target_snr)
+    data = data + noise
+
+    return data 
+
+
 #=============================================
 #        path
 #=============================================
 root_dir = '/home/tk/Documents/'
 
 # clean_dir = root_dir + 'clean/'
-noise_dir = '/home/tk/Documents/noise_block/white/'
+noise_dir = '/home/tk/Documents/noise_block/pink/'
 # mix_dir = root_dir + 'mix/' 
 # clean_label_dir = root_dir + 'clean_labels/' 
 # mix_label_dir = root_dir + 'mix_labels/' 
@@ -489,7 +510,7 @@ model.eval()
 for i, data in enumerate(testloader, 0):
 #       inputs = data
 #       inputs = Variable(inputs)
-    top = model.upward(data) #+ white(inputs))
+    top = model.upward(data)
     outputs = model.downward(top, shortcut = True)
 
     targets = data.view(bs, 1, 256, 128)
@@ -506,6 +527,9 @@ for i, data in enumerate(testloader, 0):
         inn = data[0].view(256, 128).detach().numpy() * 255
         imageio.imwrite(root_dir + 'cocktail/autoencoder/' + str(epo) + "_" + str(i) + "_clean.png", inn)
 
+#        add_noi = add_noise(data[0]).view(256, 128).detach().numpy() * 255
+#        imageio.imwrite(root_dir + 'cocktail/autoencoder/' + str(epo) + "_" + str(i) + "_noise.png", add_noi)
+  
         out = outputs[0].view(256, 128).detach().numpy() * 255
         imageio.imwrite(root_dir + 'cocktail/autoencoder/' + str(epo) + "_" + str(i) + "_re.png", out)
 
