@@ -76,9 +76,6 @@ class featureDataSet(Dataset):
             self.labels = torch.Tensor(self.labels[indexes]).squeeze()
             del indexes
 
-            print(self.spec.shape)
-            print(self.labels.shape)
-
         spec = self.spec[offset_in_json]
         label = self.labels[offset_in_json]
         return spec, label
@@ -89,7 +86,7 @@ class featureDataSet(Dataset):
 featureset  = featureDataSet()
 trainloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
-                                                shuffle = True) # must be False for efficiency
+                                                shuffle = False) # must be False for efficiency
 
 #=================================================    
 #           model 
@@ -220,7 +217,7 @@ for epo in range(epoch):
         loss_record.append(loss.item())
         every_loss.append(loss.item())
         print ('[%d, %5d] loss: %.3f' % (epo, i, loss.item()))
-        
+
     epoch_loss.append(np.mean(every_loss))
     every_loss = []
     accuracy = test(model)
