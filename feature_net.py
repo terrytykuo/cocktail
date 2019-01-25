@@ -65,15 +65,15 @@ class featureDataSet(Dataset):
             self.curr_json_index = newest_json_index
 
             f = open(clean_dir + '{}'.format(cleanfolder[newest_json_index]))
-            self.spec = torch.Tensor(json.load(f)).permute(1,0,2,3)
-            self.spec = torch.cat(self.spec, dim=0)
+            self.spec = np.array(json.load(f)).transpose(1,0,2,3)
+            self.spec = np.concatenate(self.spec, axis=0)
 
             self.labels = np.array([np.arange(CLASSES) for _ in range(ENTRIES_PER_JSON)])
 
             indexes = random.shuffle(np.arange(ENTRIES_PER_JSON))
 
-            self.spec = self.spec[indexes]
-            self.labels = self.labels[indexes]
+            self.spec = torch.Tensor(self.spec[indexes])
+            self.labels = torch.Tensor(self.labels[indexes])
             del indexes
 
         spec = self.spec[offset_in_json]
