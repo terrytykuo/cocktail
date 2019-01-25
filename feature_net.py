@@ -26,7 +26,7 @@ random.seed(7)
 
 epoch = 5
 lr = 0.01
-mom = 0.8
+mom = 0.9
 bs = 5
 
 ENTRIES_PER_JSON = 100
