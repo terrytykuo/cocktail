@@ -209,7 +209,7 @@ class featureNet(nn.Module):
         x = F.relu(self.conv7(x))
         x = self.maxpool7(x)
 
-        x = x.reshape(bs, 4096)
+        x = x.reshape(bs, 1024)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
 
