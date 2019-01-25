@@ -242,9 +242,10 @@ class featureNet(nn.Module):
 
 model = featureNet()
 try:
-    model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
+    if sys.argv[1]=="reuse":
+        model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
 except:
-    print("model not available")
+    print("reused model not available")
 print (model)
 
 #============================================
