@@ -74,6 +74,9 @@ class featureDataSet(Dataset):
 
             self.spec = torch.Tensor(self.spec[indexes]).squeeze()
             self.labels = torch.Tensor(self.labels[indexes]).squeeze()
+
+            print(self.spec.shape, self.labels)
+
             del indexes
 
         spec = self.spec[offset_in_json]
@@ -205,7 +208,6 @@ for epo in range(epoch):
     for i, data in enumerate(trainloader, 0):
         
         inputs, labels = data
-        print(inputs, labels)
         
         optimizer.zero_grad()
         outputs = model(inputs)
