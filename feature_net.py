@@ -205,7 +205,7 @@ for epo in range(epoch):
     for i, data in enumerate(trainloader, 0):
         
         inputs, labels = data
-        inputs = Variable(inputs)
+        print(inputs, labels)
         
         optimizer.zero_grad()
         outputs = model(inputs)
