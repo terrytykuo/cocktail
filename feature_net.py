@@ -65,7 +65,7 @@ class featureDataSet(Dataset):
             self.curr_json_index = newest_json_index
 
             f = open(clean_dir + '{}'.format(cleanfolder[newest_json_index]))
-            self.spec = torch.Tensor(json.load(f)).transpose(1,0,2,3)
+            self.spec = torch.Tensor(json.load(f)).permute(1,0,2,3)
             self.spec = torch.cat(self.spec, dim=0)
 
             self.labels = np.array([np.arange(CLASSES) for _ in range(ENTRIES_PER_JSON)])
