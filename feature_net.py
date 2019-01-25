@@ -111,17 +111,17 @@ class ResBlock(nn.Module):
             x1 = F.relu(self.conv1(x))
             x1 =        self.conv2(x1)
             x  = self.sizematch(self.channels_in, self.channels_out, x)
-            return x + x1
+            return F.relu(x + x1)
         elif self.channels_out < self.channels_in:
             x = F.relu(self.conv1(x))
             x1 =       self.conv2(x)
             x = x + x1
-            return x
+            return F.relu(x)
         else:
             x1 = F.relu(self.conv1(x))
             x1 =        self.conv2(x1)
             x = x + x1
-            return x
+            return F.relu(x)
 
     def sizematch(self, channels_in, channels_out, x):
         zeros = torch.zeros( (x.size()[0], channels_out - channels_in, x.shape[2], x.shape[3]), dtype=torch.float )
@@ -133,34 +133,62 @@ class featureNet(nn.Module):
         super(featureNet, self).__init__()
 
         self.conv1 = nn.Sequential(
-            ResBlock(1, 4),
-            ResBlock(4, 4)
+            ResBlock(1, 8),
+            ResBlock(8, 8),
+            ResBlock(8, 8),
+            nn.BatchNorm2d(8)
         )
         self.maxpool1 = nn.MaxPool2d(kernel_size=2)
-        self.batchnorm1 = nn.BatchNorm2d(4)
 
         self.conv2 = nn.Sequential(
-            ResBlock(4, 8),
-            ResBlock(8, 8)
+            ResBlock(8, 8),
+            ResBlock(8, 16),
+            ResBlock(16, 16),
+            nn.BatchNorm2d(16)
         )
         self.maxpool2 = nn.MaxPool2d(kernel_size=2)
-        self.batchnorm2 = nn.BatchNorm2d(8)
 
         self.conv3 = nn.Sequential(
-            ResBlock(8, 16),
-            ResBlock(16, 16)
+            ResBlock(16, 16),
+            ResBlock(16, 32),
+            ResBlock(32, 32),
+            nn.BatchNorm2d(32),
         )
         self.maxpool3 = nn.MaxPool2d(kernel_size=2)
-        self.batchnorm3 = nn.BatchNorm2d(16)
 
         self.conv4 = nn.Sequential(
-            ResBlock(16, 16),
-            ResBlock(16, 16)
+            ResBlock(32, 32),
+            ResBlock(32, 64),
+            ResBlock(64, 64),
+            nn.BatchNorm2d(64),
         )
         self.maxpool4 = nn.MaxPool2d(kernel_size=2)
-        self.batchnorm4 = nn.BatchNorm2d(16)
 
-        self.fc1 = nn.Linear(16*8*16, 512)
+        self.conv5 = nn.Sequential(
+            ResBlock(64, 64),
+            ResBlock(64, 128),
+            ResBlock(128, 128),
+            nn.BatchNorm2d(128),
+        )
+        self.maxpool5 = nn.MaxPool2d(kernel_size=2)
+
+        self.conv6 = nn.Sequential(
+            ResBlock(128, 128),
+            ResBlock(128, 256),
+            ResBlock(256, 256),
+            nn.BatchNorm2d(256),
+        )
+        self.maxpool6 = nn.MaxPool2d(kernel_size=2)
+
+        self.conv7 = nn.Sequential(
+            ResBlock(256, 256),
+            ResBlock(256, 512),
+            ResBlock(512, 512),
+            nn.BatchNorm2d(512),
+        )
+        self.maxpool7 = nn.MaxPool2d(kernel_size=2)
+
+        self.fc1 = nn.Linear(4096, 512)
         self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
@@ -174,7 +202,14 @@ class featureNet(nn.Module):
         x = self.maxpool3(x)
         x = F.relu(self.conv4(x))
         x = self.maxpool4(x)
-        x = x.reshape(bs, 16*8*16)
+        x = F.relu(self.conv5(x))
+        x = self.maxpool5(x)
+        x = F.relu(self.conv6(x))
+        x = self.maxpool6(x)
+        x = F.relu(self.conv7(x))
+        x = self.maxpool7(x)
+
+        x = x.reshape(bs, 4096)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
 
