@@ -24,7 +24,7 @@ full_audio = ['birdstudybook',
               'natureguide', 'pioneersoftheoldsouth', 
               'pioneerworkalps_02_harper_12', 
               'romancecommonplace', 'travelstoriesretold']
-
+          
 
 # gen_spectrogram
 def gen_noise_spectrogram(wav, target_snr, noise_type):
