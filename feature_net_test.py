@@ -139,12 +139,9 @@ def test(model):
             total += labels.size(0)
             
             correct += (predicted == labels).sum()
-            print ("correct = ", correct, 'total =', total)
-            
-            accuracy = 100 * correct/ total
+
             loss_record.append(loss.item())
             every_loss.append(loss.item())
-            print ('[%d, %5d] loss: %.3f, acc: %.3f' % (epoch, i, loss.item(), accuracy))
             
         epoch_loss.append(np.mean(every_loss))
         every_loss = []
@@ -156,7 +153,7 @@ def test(model):
         plt.savefig('loss.png')
         plt.close()
 
-    return (float)(correct) / total
+    return correct, total
 
 if __name__ == '__main__':
     model_for_test = featureNet()
