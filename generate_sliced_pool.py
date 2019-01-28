@@ -37,27 +37,27 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
               'pioneerworkalps_02_harper_12', 
               'romancecommonplace', 'travelstoriesretold']
 
-full_audio_path = '/home/tk/Documents/full_audio/' # full audio will be stored here
-sec10_sliced_path = '/home/tk/Documents/slice_10sec/' # 10 sec sliced will be stored here
-sliced_pool_path =  '/home/tk/Documents/sliced_pool/'
+full_audio_path = '/home/tk/cocktail/full_audio/' # full audio will be stored here
+sec10_sliced_path = '/home/tk/cocktail/slice_10sec/' # 10 sec sliced will be stored here
+sliced_pool_path =  '/home/tk/cocktail/sliced_pool/'
 
 
 ##=============================
 ##       slicing
 ##=============================
+
 for name in full_audio:
     sliced_list = []
-    if (sliced_pool_path + name) == False :
-        os.mkdir(sliced_pool_path + name)
+
+    os.mkdir(sliced_pool_path + 'clean/' + name)
     
-    
-    for i in range(60, 160): # numbers in range() controls which segements to take
+    for i in range(200, 225): # numbers in range() controls which segements to take
         m = name + '_' + str(i) + '.wav'
         sliced_list.append(m)
         del m
         
     for j in sliced_list:
-        slice_it(j, sec10_sliced_path + name + '/', sliced_pool_path + name + '/for_mix/', 500)
+        slice_it(j, sec10_sliced_path + name + '/', sliced_pool_path + 'clean/' + name + '/', 500)
 
         
 #for j in sliced_list:

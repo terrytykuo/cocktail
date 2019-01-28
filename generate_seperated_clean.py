@@ -4,11 +4,11 @@ from data_process import gen_spectrogram
 import json
 
 
-root_dir = '/home/tk/Documents/'
-sliced_pool_path = '/home/tk/Documents/sliced_pool/'
-mixed_pool_path =  '/home/tk/Documents/mix_pool/'
-clean_path = '/home/tk/Documents/clean/'
-cleanlabel_path = '/home/tk/Documents/clean_labels/'
+root_dir = '/home/tk/cocktail/'
+sliced_pool_path = '/home/tk/cocktail/sliced_pool/'
+mixed_pool_path =  '/home/tk/cocktail/mix_pool/'
+clean_path = '/home/tk/cocktail/clean/'
+cleanlabel_path = '/home/tk/cocktail/clean_labels/'
 
 full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
               'constructivebeekeeping',
@@ -27,19 +27,19 @@ for i in range(blocks):
         all_clean_spec = []
         all_clean_label = []
 
-        if (mixed_pool_path + 'feature/' + name) == False:
-            os.mkdir(mixed_pool_path + 'feature/' + name)
-        
-        if (mixed_pool_path + 'feature_label/' + name) == False:
-            os.mkdir(mixed_pool_path + 'feature_label/' + name)
+#        if (mixed_pool_path + 'feature/' + name) == False:
+#            os.mkdir(mixed_pool_path + 'feature/' + name)
+#        
+#        if (mixed_pool_path + 'feature_label/' + name) == False:
+#            os.mkdir(mixed_pool_path + 'feature_label/' + name)
 
 
-        file_name_list = os.listdir(sliced_pool_path + name + '/clean/')
+        file_name_list = os.listdir(sliced_pool_path + 'clean/' + name)
         file_name = np.random.choice(file_name_list, datapoints)
         
 
         for k in file_name:
-            spec = gen_spectrogram(sliced_pool_path + name + '/clean/' + k)
+            spec = gen_spectrogram(sliced_pool_path + 'clean/' + name + '/'+ k)
             print (k)
             all_clean_spec.append(spec)
             all_clean_label.append(ind)
