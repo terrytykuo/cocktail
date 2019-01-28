@@ -34,15 +34,13 @@ CLASSES = 10
 SAMPLES_PER_JSON = 1000
 
 #======================================
-clean_dir = '/home/tk/cocktail/clean/' 
+clean_dir = '/home/tk/cocktail/cleanblock/' 
 clean_label_dir = '/home/tk/cocktail/clean_labels/' 
 #========================================
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
 
-cleanlabelfolder = os.listdir(clean_label_dir)
-cleanlabelfolder.sort()
 
 #========================================
 
@@ -129,92 +127,6 @@ class ResBlock(nn.Module):
         zeros = torch.zeros( (x.size()[0], channels_out - channels_in, x.shape[2], x.shape[3]), dtype=torch.float )
         return torch.cat((x, zeros), dim=1)
 
-'''
-class featureNet(nn.Module):
-    def __init__(self):
-        super(featureNet, self).__init__()
-
-        self.conv1 = nn.Sequential(
-            ResBlock(1, 8),
-            ResBlock(8, 8),
-            ResBlock(8, 8),
-            nn.BatchNorm2d(8)
-        )
-        self.maxpool1 = nn.MaxPool2d(kernel_size=2)
-
-        self.conv2 = nn.Sequential(
-            ResBlock(8, 8),
-            ResBlock(8, 16),
-            ResBlock(16, 16),
-            nn.BatchNorm2d(16)
-        )
-        self.maxpool2 = nn.MaxPool2d(kernel_size=2)
-
-        self.conv3 = nn.Sequential(
-            ResBlock(16, 16),
-            ResBlock(16, 32),
-            ResBlock(32, 32),
-            nn.BatchNorm2d(32),
-        )
-        self.maxpool3 = nn.MaxPool2d(kernel_size=2)
-
-        self.conv4 = nn.Sequential(
-            ResBlock(32, 32),
-            ResBlock(32, 64),
-            ResBlock(64, 64),
-            nn.BatchNorm2d(64),
-        )
-        self.maxpool4 = nn.MaxPool2d(kernel_size=2)
-
-        self.conv5 = nn.Sequential(
-            ResBlock(64, 64),
-            ResBlock(64, 128),
-            ResBlock(128, 128),
-            nn.BatchNorm2d(128),
-        )
-        self.maxpool5 = nn.MaxPool2d(kernel_size=2)
-
-        self.conv6 = nn.Sequential(
-            ResBlock(128, 128),
-            ResBlock(128, 256),
-            ResBlock(256, 256),
-            nn.BatchNorm2d(256),
-        )
-        self.maxpool6 = nn.MaxPool2d(kernel_size=2)
-
-        self.conv7 = nn.Sequential(
-            ResBlock(256, 256),
-            ResBlock(256, 512),
-            ResBlock(512, 512),
-            nn.BatchNorm2d(512),
-        )
-        self.maxpool7 = nn.MaxPool2d(kernel_size=2)
-
-        self.fc = nn.Linear(1024, 10)
-
-    def forward(self, x):
-        x = x.view(bs, 1 ,256, 128)
-        
-        x = self.conv1(x)
-        x = self.maxpool1(x)
-        x = self.conv2(x)
-        x = self.maxpool2(x)
-        x = self.conv3(x)
-        x = self.maxpool3(x)
-        x = self.conv4(x)
-        x = self.maxpool4(x)
-        x = self.conv5(x)
-        x = self.maxpool5(x)
-        x = self.conv6(x)
-        x = self.maxpool6(x)
-        x = self.conv7(x)
-        x = self.maxpool7(x)
-
-        x = x.reshape(bs, 1024)
-        x = F.relu(self.fc(x))
-
-        return F.log_softmax(x, dim = 1)
-'''
 
 class featureNet(nn.Module):
     def __init__(self):
@@ -243,7 +155,7 @@ class featureNet(nn.Module):
 model = featureNet()
 try:
     if sys.argv[1]=="reuse":
-        model.load_state_dict(torch.load('/home/tk/Documents/FeatureNet.pkl'))
+        model.load_state_dict(torch.load('/home/tk/cocktail/FeatureNet.pkl'))
 except:
     print("reused model not available")
 print (model)

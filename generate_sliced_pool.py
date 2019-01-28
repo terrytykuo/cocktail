@@ -51,7 +51,7 @@ for name in full_audio:
         os.mkdir(sliced_pool_path + name)
     
     
-    for i in range(60, 160): # numbers in range() controls which segements to take
+    for i in range(225, 250): # numbers in range() controls which segements to take
         m = name + '_' + str(i) + '.wav'
         sliced_list.append(m)
         del m
