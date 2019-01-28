@@ -34,8 +34,8 @@ CLASSES = 10
 SAMPLES_PER_JSON = 1000
 
 #======================================
-clean_dir = '/home/tk/Documents/clean/' 
-clean_label_dir = '/home/tk/Documents/clean_labels/' 
+clean_dir = '/home/tk/cocktail/clean/' 
+clean_label_dir = '/home/tk/cocktail/clean_labels/' 
 #========================================
 
 cleanfolder = os.listdir(clean_dir)
@@ -75,7 +75,7 @@ class featureDataSet(Dataset):
             random.shuffle(indexes)
 
             # indexes: randomly arranged 0:999
-            # self.labels: 0-9,0-9,...,0-9
+            # self.labels: 0-9, 0-9, ..., 0-9
 
             self.spec = torch.Tensor(self.spec[indexes]).squeeze()
             self.labels = torch.Tensor(self.labels[indexes]).squeeze()
@@ -280,7 +280,8 @@ for epo in range(epoch):
         optimizer.step()
         loss_record.append(loss.item())
         every_loss.append(loss.item())
-        print ('[%d, %5d] loss: %.3f hits: %d/%d' % (
+        print ('[%d, %5d] loss: %.3f hits: %d/%d' % 
+            (
                 epo, i, loss.item(), 
                 np.sum( np.argmax(outputs.detach().numpy(), axis=1) == labels.detach().numpy()),
                 bs
