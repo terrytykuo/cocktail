@@ -267,6 +267,7 @@ epoch_accu = []
 
 model.train()
 for epo in range(epoch):
+
     for i, data in enumerate(trainloader, 0):
         
         inputs, labels = data
@@ -290,8 +291,10 @@ for epo in range(epoch):
 
     epoch_loss.append(np.mean(every_loss))
     every_loss = []
-    accuracy = test(model)
+    corr, total = test(model)
+    accuracy = (float)(corr) / total
     epoch_accu.append(accuracy)
+    print('test: [%d] accuracy: %.4f' % (epo, accuracy))
 
             
 torch.save(model.state_dict(), '/home/tk/Documents/FeatureNet.pkl')
