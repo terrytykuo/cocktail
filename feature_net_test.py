@@ -32,7 +32,7 @@ ENTRIES_PER_JSON = 100
 SAMPLES_PER_JSON = 1000
 
 #======================================
-clean_dir = '/home/tk/Documents/clean_test/' 
+clean_dir = '/home/tk/cocktail/clean_test/' 
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
