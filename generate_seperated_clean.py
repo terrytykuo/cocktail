@@ -18,14 +18,14 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
               'romancecommonplace', 'travelstoriesretold']
               
               
-blocks = 10
+blocks = 20
 datapoints = 100
 
 for i in range(blocks):
     for ind, name in enumerate(full_audio):
         
         all_clean_spec = []
-        all_clean_label = []
+#        all_clean_label = []
 
 #        if (mixed_pool_path + 'feature/' + name) == False:
 #            os.mkdir(mixed_pool_path + 'feature/' + name)
@@ -42,26 +42,26 @@ for i in range(blocks):
             spec = gen_spectrogram(sliced_pool_path + 'clean/' + name + '/'+ k)
             print (k)
             all_clean_spec.append(spec)
-            all_clean_label.append(ind)
+#            all_clean_label.append(ind)
             print (ind)
             
             
         all_clean_spec = np.array(all_clean_spec)
         all_clean_spec = np.stack(all_clean_spec)
 
-        all_clean_label = np.array(all_clean_label)
-        all_clean_label = np.stack(all_clean_label)
+#        all_clean_label = np.array(all_clean_label)
+#        all_clean_label = np.stack(all_clean_label)
 
             
         print ("name = ", name , ", shape = ", all_clean_spec.shape)
-        print ("label = ", name , ", shape = ", all_clean_label.shape)
+#        print ("label = ", name , ", shape = ", all_clean_label.shape)
 
     
         with open(root_dir + 'clean/' + name + str(i) + '.json', 'w') as jh:
             json.dump(all_clean_spec.tolist(), jh)
 
-        with open(root_dir + 'clean_labels/' + name + str(i) + '.json', 'w') as jh:
-            json.dump(all_clean_label.tolist(), jh)
+#        with open(root_dir + 'clean_labels/' + name + str(i) + '.json', 'w') as jh:
+#            json.dump(all_clean_label.tolist(), jh)
 
 
 
