@@ -34,8 +34,8 @@ import data_process
 # parameters:
 
 ## 10 sec slicing:
-full_audio_path = '/home/tk/Documents/full_audio/' # full audio will be stored here
-sec10_sliced_path = '/home/tk/Documents/slice_10sec/' # 10 sec sliced will be stored here
+full_audio_path = '/home/tk/cocktail/full_audio/' # full audio will be stored here
+sec10_sliced_path = '/home/tk/cocktail/slice_10sec/' # 10 sec sliced will be stored here
 
 #=======================================================================
 # Operations
@@ -47,6 +47,7 @@ if ".DS_Store" in audio_list:
 print ("There are", len(audio_list), "fully concatenated files")
 
 for audio in audio_list:
+
     os.mkdir(sec10_sliced_path + audio[:-4])
-    data_process.slice_it(audio, full_audio_path, sec10_sliced_path + audio + "/", length = 10000)
+    data_process.slice_it(audio, full_audio_path, sec10_sliced_path + audio[:-4] + '/', length = 10000)
     print ('done slicing')

@@ -25,12 +25,19 @@ random.seed(7)
 #=============================================
 
 epoch = 5
+<<<<<<< HEAD
+lr = 0.01
+mom = 0.9
+bs = 10
+
+ENTRIES_PER_JSON = 100
+CLASSES = 10
+=======
 lr = 0.001
 mom = 0.8
 bs = 1
 
-ENTRIES_PER_JSON = 100
-CLASSES = 10
+>>>>>>> master
 SAMPLES_PER_JSON = 1000
 
 #======================================
@@ -55,28 +62,72 @@ class featureDataSet(Dataset):
         return SAMPLES_PER_JSON * len(cleanfolder)
 
     def __getitem__(self, index):
-
+        label_list = []
         newest_json_index = index // SAMPLES_PER_JSON
         offset_in_json = index % SAMPLES_PER_JSON
 
         if not (self.curr_json_index == newest_json_index):
             self.curr_json_index = newest_json_index
 
+<<<<<<< HEAD
             f = open(clean_dir + '{}'.format(cleanfolder[newest_json_index]))
             self.spec = np.array(json.load(f)).transpose(1,0,2,3)
             self.spec = np.concatenate(self.spec, axis=0)
 
             self.labels = np.array([np.arange(CLASSES) for _ in range(ENTRIES_PER_JSON)])
             self.labels = np.concatenate(self.labels, axis=0)
+=======
+            with open(clean_dir + '{}'.format(cleanfolder[newest_json_index])):
+                self.spec = torch.Tensor(json.load(f))
+                label_list.append([[0],[1],[2], [3], [4], [5], [6], [7], [8], [9]])
+                
+
+        self.spec = np.transpose(self.spec, (1,0,2,3))
+        self.spec = np.vstack(self.spec)
+            
+        self.label = np.hstack(self.label)
+        
+        spec = self.spec[offset_in_json]
+        label = label
+        
+        return spec, label
+>>>>>>> master
 
             indexes = np.arange(ENTRIES_PER_JSON * CLASSES)
             random.shuffle(indexes)
 
+<<<<<<< HEAD
             # indexes: randomly arranged 0:999
             # self.labels: 0-9, 0-9, ..., 0-9
 
             self.spec = torch.Tensor(self.spec[indexes]).squeeze()
             self.labels = torch.Tensor(self.labels[indexes]).squeeze()
+=======
+class featureDataSet(Dataset):
+    def __init__(self, clean_dir):
+
+        clean_list = []
+        clean_label_list = []
+                    
+        for i in cleanfolder:
+       	    with open(clean_dir + '{}'.format(i)) as f:
+                tensor = torch.Tensor(json.load(f))
+                clean_list.append(tensor)
+                clean_label_list.append([[0],[1],[2],[3],[4],[5],[6],[7],[8],[9]])
+        
+        
+        cleanblock = torch.cat(clean_list, 0)
+        cleanlabelblock = torch.cat(clean_label_list, 0)
+
+        self.spec = cleanblock
+        self.label = cleanlabelblock
+        
+        del clean_list
+        del clean_label_list
+        
+    def __len__(self):
+        return self.spec.shape[1]
+>>>>>>> master
 
             del indexes
 
@@ -87,7 +138,11 @@ class featureDataSet(Dataset):
 #=================================================    
 #           Dataloader 
 #=================================================
+<<<<<<< HEAD
 featureset  = featureDataSet()
+=======
+featureset  = featureDataSet(clean_dir)
+>>>>>>> master
 trainloader = torch.utils.data.DataLoader(dataset = featureset,
                                                 batch_size = bs,
                                                 shuffle = False) # must be False for efficiency
@@ -141,11 +196,25 @@ class featureNet(nn.Module):
 
         
     def forward(self, x):
+<<<<<<< HEAD
         x = x.view(bs, 1 ,256, 128)
         x = F.relu(self.maxpool(self.conv1(x)))
         x = F.relu(self.maxpool(self.conv2(x)))
         x = self.batchnorm(x)
         x = x.view(-1, 1024)
+=======
+        x = x.view(bs, 100, 256, 128)
+        
+        x = F.relu(self.conv1(x))
+        x = self.maxpool1(x)
+        x = F.relu(self.conv2(x))
+        x = self.maxpool2(x)
+        x = F.relu(self.conv3(x))
+        x = self.maxpool3(x)
+        x = F.relu(self.conv4(x))
+        x = self.maxpool4(x)
+        x = x.reshape(bs, 16*8*16)
+>>>>>>> master
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)

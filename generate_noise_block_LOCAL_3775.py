@@ -9,7 +9,7 @@ import scipy.io.wavfile
 
 
 blocks = 1
-target_snr = 0.1258925 # -9 dB
+target_snr = 0.0.501187 # -3 dB
 noise_type = 'pink'
 
 root_dir = '/home/tk/Documents/'

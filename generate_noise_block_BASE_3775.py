@@ -7,14 +7,9 @@ import acoustics
 import scipy
 import scipy.io.wavfile
 
-
-blocks = 1
-target_snr = 0.1258925 # -9 dB
-noise_type = 'pink'
-
 root_dir = '/home/tk/Documents/'
 sliced_pool_path = '/home/tk/Documents/sliced_pool/'
-mixed_pool_path =  '/home/tk/Documents/noise_block/' + noise_type + '/'
+mixed_pool_path =  '/home/tk/Documents/noise_block/white_noise/'
 
 full_audio = ['birdstudybook',
               'captaincook',
@@ -24,7 +19,11 @@ full_audio = ['birdstudybook',
               'natureguide', 'pioneersoftheoldsouth', 
               'pioneerworkalps_02_harper_12', 
               'romancecommonplace', 'travelstoriesretold']
-          
+              
+              
+blocks = 1
+target_snr = 1
+noise_type = 'white'
 
 # gen_spectrogram
 def gen_noise_spectrogram(wav, target_snr, noise_type):
