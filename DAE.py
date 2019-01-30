@@ -25,13 +25,8 @@ random.seed(7)
 #        Hyperparameters
 #=============================================
 
-<<<<<<< HEAD
 epoch = 2
 lr = 0.005
-=======
-epoch = 5
-lr = 0.0005
->>>>>>> 7eb4666d04cb67d5ccd2d43c0c7f407340d9650e
 mom = 0.9
 bs = 10
 
@@ -74,53 +69,24 @@ parser.add_argument("--root_dir")
 parser.parse_args()
 
 
-<<<<<<< HEAD
 clean_dir = root_dir + 'clean/'
-=======
-
-clean_dir = root_dir + 'clean/first_part/' 
-# mix_dir = root_dir + 'mix/' 
-# clean_label_dir = root_dir + 'clean_labels/' 
-# mix_label_dir = root_dir + 'mix_labels/' 
->>>>>>> 7eb4666d04cb67d5ccd2d43c0c7f407340d9650e
 
 cleanfolder = os.listdir(clean_dir)
 # cleanfolder.sort()
 
-<<<<<<< HEAD
 clean_list = []
-=======
-# mixfolder = os.listdir(mix_dir)
-# mixfolder.sort()
-
->>>>>>> 7eb4666d04cb67d5ccd2d43c0c7f407340d9650e
-
-
 #=============================================
 #       Define Datasets
 #=============================================
 class MSourceDataSet(Dataset):
     
     def __init__(self, clean_dir):
-<<<<<<< HEAD
-
-        # Overfitting single block
-        with open(clean_dir + 'clean3.json') as f:
-            clean_list.append(torch.Tensor(json.load(f)))
-=======
         
         clean_list = []
-
-        # # Overfitting single block
-        # with open(clean_dir + 'clean3.json') as f:
-        #     clean_list.append(torch.Tensor(json.load(f)))
-
                     
         for i in cleanfolder:
             with open(clean_dir + '{}'.format(i)) as f:
                 clean_list.append(torch.Tensor(json.load(f)))
-        
->>>>>>> 7eb4666d04cb67d5ccd2d43c0c7f407340d9650e
         
         cleanblock = torch.cat(clean_list, 0)
 #         mixblock = torch.cat(mix_list, 0)
@@ -487,16 +453,12 @@ class ResDAE(nn.Module):
 
         return y
 
-<<<<<<< HEAD
-
 model = ResDAE()
-# model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
+try:
+    model.load_state_dict(torch.load(root_dir + 'cocktail/autoencoder/DAE.pkl'))
+except:
+    print("model not available")
 print (model)
-=======
-model = ResDAE()
-model.load_state_dict(torch.load(root_dir + 'cocktail/autoencoder/DAE.pkl'))
-# print (model)
->>>>>>> 7eb4666d04cb67d5ccd2d43c0c7f407340d9650e
 
 #=============================================
 #        Optimizer
