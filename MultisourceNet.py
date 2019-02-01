@@ -64,23 +64,23 @@ server = False
 root_dir = '/home/tk/cocktail/'
 
 
-spec_train_dir = root_dir + 'cleanblock/'
-spec_test_dir  = root_dir + 'clean_test/'
-feat_train_dir = root_dir + 'feat_train/'
-feat_test_dir  = root_dir + 'feat_test/'
+train_dir = root_dir + 'cleanblock/'
+test_dir  = root_dir + 'clean_test/'
+# feat_train_dir = root_dir + 'feat_train/'
+# feat_test_dir  = root_dir + 'feat_test/'
 
-spec_train_blocks = os.listdir(spec_train_dir)
-spec_train_blocks.sort()
+# 22 in train dir, 4 in test dir
+# 22 = 3+19, 4 = 2+2
 
-spec_test_blocks = os.listdir(spec_test_dir)
-spec_test_blocks.sort()
+temp = os.listdir(train_dir)
+temp.sort()
+spec_train_blocks = temp[:19]
+spec_test_blocks = temp[19:]
 
-feat_train_block = os.listdir(feat_train_dir)[0]
-# feat_train_blocks.sort()
-
-feat_test_block = os.listdir(feat_test_dir)[0]
-# feat_test_blocks.sort()
-
+temp = os.listdir(test_dir)
+temp.sort()
+feat_train_block = temp[:2]
+feat_test_block = temp[2:]
 
 #=============================================
 #       Define Datasets
@@ -130,8 +130,8 @@ class trainDataSet(Dataset):
         # 总保有一份 spec_block ，一份 feat_block
         # 每次访问时，有长为bs的f-a-b列表，每次取下标从列表中取得
         # f ：随机一个下标，取目标编号的spectrogram
-        self.feat_block = json.load(open(feat_train_dir + feat_train_block, "rb")).reshape(1,0,2,3)
-        self.spec_block = json.load(open(spec_train_dir + spec_train_blocks[0], "rb")).reshape(1,0,2,3)
+        self.feat_block = json.load(open(train_dir + feat_train_block, "rb")).reshape(1,0,2,3)
+        self.spec_block = json.load(open(train_dir + spec_train_blocks[0], "rb")).reshape(1,0,2,3)
         self.f_a_b = gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)
         
         self.block_index = 0
@@ -161,7 +161,7 @@ class trainDataSet(Dataset):
                 self.entry_index += 1
             else: # load next block
                 self.block_index += 1
-                self.spec_block = json.load(open(spec_train_dir + spec_train_blocks[self.block_index], "rb")).reshape(1,0,2,3)
+                self.spec_block = json.load(open(train_dir + spec_train_blocks[self.block_index], "rb")).reshape(1,0,2,3)
                 self.entry_index = 0
 
             if self.f_a_b_index < RANDOM_SAMPLES_PER_ENTRY:
@@ -184,8 +184,8 @@ class testDataSet(Dataset):
     # 从block中，取出entry
     # 从entry中，取出一系列f-a-b
     def __init__(self):
-        self.feat_block = json.load(open(feat_test_dir + feat_test_block, "rb")).reshape(1,0,2,3)
-        self.spec_block = json.load(open(feat_test_dir + spec_test_blocks, "rb")).reshape(1,0,2,3)
+        self.feat_block = json.load(open(test_dir + feat_test_block, "rb")).reshape(1,0,2,3)
+        self.spec_block = json.load(open(test_dir + spec_test_blocks, "rb")).reshape(1,0,2,3)
         self.f_a_b = gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)
 
         self.curr_json_index = 0
@@ -772,8 +772,8 @@ for epo in range(epoch):
     epoch_train.append(train_average_loss)
     epoch_test.append(test_average_loss)
 
-    print ("train finish epoch #{}, loss average #{}".format(epo, train_average_loss))
-    print ("test finish epoch #{}, loss average #{}".format(epo, test_average_loss))
+    print ("train finish epoch #{}, loss average {}".format(epo, train_average_loss))
+    print ("test finish epoch #{}, loss average {}".format(epo, test_average_loss))
 
     loss_record = []
     test_record = []
