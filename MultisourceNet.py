@@ -216,18 +216,21 @@ class testDataSet(Dataset):
 
         spec = self.f_a_b[newest_fab_index]
 
-        return feat, a, b
+        return feat
 
 #=============================================
 #        Define Dataloader
 #=============================================
 
 mixset = trainDataSet()
-
 mixloader = torch.utils.data.DataLoader(dataset = mixset,
     batch_size = bs,
     shuffle = False)
 
+testset = testDataSet()
+testloader = torch.utils.data.DataLoader(dataset = testset,
+    batch_size = 1,
+    shuffle = False)
 
 
 #=============================================
@@ -667,7 +670,9 @@ print(Res_model)
 #=============================================
 
 criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(Res_model.parameters(), lr = lr) #, momentum = mom)
+feat_optimizer = torch.optim.SGD(featurenet.parameters(), lr = lr, momentum=mom)
+anet_optimizer = torch.optim.SGD(A_model.parameters(), lr = lr, momentum=mom)
+res_optimizer = torch.optim.SGD(Res_model.parameters(), lr = lr, momentum=mom)
 
 
 
@@ -676,9 +681,9 @@ optimizer = torch.optim.Adam(Res_model.parameters(), lr = lr) #, momentum = mom)
 #=============================================
 
 loss_record = []
-# every_loss = []
-# epoch_loss = []
-
+test_record = []
+epoch_train = []
+epoch_test = []
 
 #=============================================
 #        Train
@@ -686,10 +691,11 @@ loss_record = []
 
 Res_model.train()
 for epo in range(epoch):
+    # train
     for i, data in enumerate(mixloader, 0):
 
         # get mix spec & label
-        mix_specs, target_specs, feat_data = data
+        feat_data, mix_specs, target_specs = data
 
         optimizer.zero_grad()
 
@@ -703,14 +709,15 @@ for epo in range(epoch):
         tops = Res_model.upward(mix_specs, a7, a6, a5, a4, a3, a2) #+ white(inputs))
         outputs = Res_model.downward(tops, shortcut = True)
 
-        loss = criterion(outputs, target_specs)
+        loss_train = criterion(outputs, target_specs)
 
-        loss.backward()
-        optimizer.step()
+        loss_train.backward()
+        res_optimizer.step()
+        anet_optimizer.step()
+        feat_optimizer.step()
 
-        loss_record.append(loss.item())
-        print (i)
-
+        loss_record.append(loss_train.item())
+        print ("training batch #{}".format(i))
 
         if i % 20 == 0:
 
@@ -728,19 +735,48 @@ for epo in range(epoch):
             np.clip(outt, np.min(outt), 1)
             cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_sep.png", outt)
 
-    
-    loss_record.append(loss.item())
+    # test
+    for i, data in enumerate(testloader, 0):
+        feat_data, mix_spec, target_spec = data
+
+        feat = featurenet(feat_data)
+
+        a7, a6, a5, a4, a3, a2 = A_model(feat)
+
+        top = Res_model.upward(mix_spec, a7, a6, a5, a4, a3, a2) #+ white(inputs))
+        output = Res_model.downward(top, shortcut = True)
+
+        loss_test = criterion(output, target_spec)
+
+        test_record.append(loss_test.item())
+
     plt.figure(figsize = (20, 10))
     plt.plot(loss_record)
     plt.xlabel('iterations')
     plt.ylabel('loss')
-    plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/')
-    
-    print ('[%d] loss: %.3f' % (epo, loss.item()))
-   
+    plt.savefig(root_dir + 'cocktail/training.png')
     gc.collect()
     plt.close("all")
 
+    plt.figure(figsize = (20, 10))
+    plt.plot(test_record)
+    plt.xlabel('iterations')
+    plt.ylabel('loss')
+    plt.savefig(root_dir + 'cocktail/testing.png')
+    gc.collect()
+    plt.close("all")
+
+    train_average_loss = np.average(loss_record)
+    test_average_loss = np.average(test_record)
+
+    epoch_train.append(train_average_loss)
+    epoch_test.append(test_average_loss)
+
+    print ("train finish epoch #{}, loss average #{}".format(epo, train_average_loss))
+    print ("test finish epoch #{}, loss average #{}".format(epo, test_average_loss))
+
+    loss_record = []
+    test_record = []
 
 
 #=============================================
