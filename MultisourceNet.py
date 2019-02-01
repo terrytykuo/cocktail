@@ -5,7 +5,6 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import torch.utils.data as data
 import torch.nn.init as init
-import pytorch_ssim
 
 import torchvision
 import torchvision.transforms as transforms
@@ -26,7 +25,7 @@ import cv2
 epoch = 10
 lr = 0.005
 mom = 0.9
-bs = 1
+BS = 10
 
 #=============================================
 #        Define Functions
@@ -62,117 +61,174 @@ def white(x):
 #=============================================
 
 server = False
-
-root_dir = '/home/tk/Documents/'
-if server == True:
-    root_dir = '/home/guotingyou/cocktail_phase2/'
+root_dir = '/home/tk/cocktail/'
 
 
-clean_dir = root_dir + 'mix_pool/feature/' 
-mix_dir = root_dir + 'mix_pool/mix_spec/' # 10-people mix
-target_spec_dir = root_dir + 'mix_pool/target_spec/' 
-target_label_dir = root_dir + 'mix_pool/target_label/'
+spec_train_dir = root_dir + 'cleanblock/'
+spec_test_dir  = root_dir + 'clean_test/'
+feat_train_dir = root_dir + 'feat_train/'
+feat_test_dir  = root_dir + 'feat_test/'
 
-cleanfolder = os.listdir(clean_dir)
-cleanfolder.sort()
+spec_train_blocks = os.listdir(spec_train_dir)
+spec_train_blocks.sort()
 
-mixfolder = os.listdir(mix_dir)
-mixfolder.sort()
+spec_test_blocks = os.listdir(spec_test_dir)
+spec_test_blocks.sort()
 
+feat_train_block = os.listdir(feat_train_dir)[0]
+# feat_train_blocks.sort()
 
-clean_list = []
-mix_list = []
-mix_label_list = []
-feature_list = []
+feat_test_block = os.listdir(feat_test_dir)[0]
+# feat_test_blocks.sort()
+
 
 #=============================================
 #       Define Datasets
 #=============================================
 
+CLASSES = 10
+RANDOM_SAMPLES_PER_ENTRY = 20
+ALL_SAMPLES_PER_ENTRY = CLASSES * (CLASSES - 1) // 2
+ENTRIES_PER_JSON = 100
+SPEC_TRAIN_JSONS = len(spec_train_blocks)
 
-class mixDataSet(Dataset):
-    
-    def __init__(self, mix_dir, target_spec_dir, target_label_dir):           
+def gen_all_pairs():
+    all_pairs = []
+    for i in range(CLASSES):
+        for j in range(CLASSES):
+            if(i==j): continue
+            all_pairs.append([i, j])
+    return all_pairs
+
+all_combinations = gen_all_pairs()
+all_combination_indices = np.arange(CLASSES * (CLASSES-1) // 2)
+
+def gen_rand_pairs(self, num_pairs):
+    ''' 至多C(10,2)对组合 '''
+    assert(2 * num_pairs <= CLASSES * (CLASSES - 1))
+    ''' 长为 num_pairs 的 list ，为 [0,CLASSES-1]x[0,CLASSES-1] 中的序偶 '''
+    chosen = all_combinations[ np.array(np.random.choice(all_combination_indices, num_pairs, replace=False)) ]
+    return chosen
+
+def gen_f_a_b(spec_block, entry_index, feat_block):
+    a_b_indexes = gen_rand_pairs(RANDOM_SAMPLES_PER_ENTRY).transpose()
+    a_index_list, b_index_list = a_b_indexes[0], a_b_indexes[1]
+    a_b = np.array([
+        spec_block[entry_index, a_index_list], 
+        spec_block[entry_index, b_index_list]
+    ])
+    feats = feat_block[
+                np.random.randint(feat_block.shape[0]),
+                a_index_list
+            ].reshape(1, RANDOM_SAMPLES_PER_ENTRY, 256, 128)
+    return np.concatenate((feats, a_b), axis=0)
+
+class trainDataSet(Dataset):
+
+    def __init__(self):
+        # 不变性：
+        # 总保有一份 spec_block ，一份 feat_block
+        # 每次访问时，有长为bs的f-a-b列表，每次取下标从列表中取得
+        # f ：随机一个下标，取目标编号的spectrogram
+        self.feat_block = json.load(open(feat_train_dir + feat_train_block, "rb")).reshape(1,0,2,3)
+        self.spec_block = json.load(open(spec_train_dir + spec_train_blocks[0], "rb")).reshape(1,0,2,3)
+        self.f_a_b = gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)
         
-        mix_list = []
-        target_spec_list = []
-        target_label_list = []
+        self.block_index = 0
+        self.entry_index = 0
+        self.f_a_b_index = 0
 
-
-        with open(mix_dir + 'mix_spec2.json') as f:
-            mix_list.append(torch.Tensor(json.load(f)))
-
-        with open(target_spec_dir + 'target_spec2.json') as f:
-            target_spec_list.append(torch.Tensor(json.load(f)))
-
-        with open(target_label_dir + 'target_label2.json') as f:
-            target_label_list.append(torch.Tensor(json.load(f)))
-
-        
-        mixblock = torch.cat(mix_list, 0)
-        targetblock = torch.cat(target_spec_list, 0)
-        targetlabel = torch.cat(target_label_list, 0)
-
-        
-
-        self.mix_spec = mixblock
-        self.target_spec = targetblock
-        self.target_label = targetlabel
-
-                
-        
     def __len__(self):
-        return self.mix_spec.shape[0]
+        return ENTRIES_PER_JSON * RANDOM_SAMPLES_PER_ENTRY * SPEC_TRAIN_JSONS // BS
+
+    def __getitem__(self, dummy_index): # index is dummy, cuz doing ordered traverse
+        '''
+        数据规格协议：
+        - block块，标号为self.block_index；需支持 get_next_entry ，内部方法： get_next_block
+            - entry流，标号为self.entry_index；需支持 gen_fab
+        - fab块：通过 self.f_a_b_index 取下标；需支持 get_next_batch ，内部方法： get_next_entry 与拼接
+            - batch流：顺序遍历无标号
+        '''
+        # to next batch
+        item = None
+        if self.f_a_b_index + BS < RANDOM_SAMPLES_PER_ENTRY:
+            item = self.f_a_b[self.f_a_b_index : self.f_a_b_index + BS]
+        else: # load next entry
+            self.f_a_b_index = 0
+            self.entry_index += 1
+
+            if self.entry_index < ENTRIES_PER_JSON:
+                self.entry_index += 1
+            else: # load next block
+                self.block_index += 1
+                self.spec_block = json.load(open(spec_train_dir + spec_train_blocks[self.block_index], "rb")).reshape(1,0,2,3)
+                self.entry_index = 0
+
+            if self.f_a_b_index < RANDOM_SAMPLES_PER_ENTRY:
+                self.f_a_b = np.concatenate(
+                    ( self.f_a_b[self.f_a_b_index:RANDOM_SAMPLES_PER_ENTRY], self.gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)), 
+                    axis=1
+                )
+            else:
+                self.f_a_b = self.gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)
+
+            item = self.f_a_b[self.f_a_b_index : self.f_a_b_index + BS]
+
+        self.f_a_b_index += BS
+
+        return item
 
 
-    def __getitem__(self, index): 
+class testDataSet(Dataset):
+    # 不用考虑batch了，直接一个一个读取
+    # 从block中，取出entry
+    # 从entry中，取出一系列f-a-b
+    def __init__(self):
+        self.feat_block = json.load(open(feat_test_dir + feat_test_block, "rb")).reshape(1,0,2,3)
+        self.spec_block = json.load(open(feat_test_dir + spec_test_blocks, "rb")).reshape(1,0,2,3)
+        self.f_a_b = gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)
 
-        mix_spec = self.mix_spec[index]
-        target_spec = self.target_spec[index]
-        target_label = self.target_label[index]
-        return mix_spec, target_spec, target_label
+        self.curr_json_index = 0
+        self.curr_entry_index = 0
+        self.curr_fab_index = 0
 
-
-class featureDataSet(Dataset):
-    
-    def __init__(self, clean_dir, label):
-        
-        full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
-              'constructivebeekeeping',
-              'discoursesbiologicalgeological_16_huxley_12', 
-              'natureguide', 'pioneersoftheoldsouth', 
-              'pioneerworkalps_02_harper_12', 
-              'romancecommonplace', 'travelstoriesretold']
-
-        feature_list = []
-
-        with open(clean_dir + full_audio[label] + '/0.json') as f:
-            feature_list.append(torch.Tensor(json.load(f)))      
-        
-        featureblock = torch.cat(feature_list, 0)
-        
-        self.featurespec = featureblock
-                
-        
     def __len__(self):
-        return self.featurespec.shape[0]
+        return ENTRIES_PER_JSON * ENTRIES_PER_JSON * ALL_SAMPLES_PER_ENTRY
 
-                
-    def __getitem__(self): 
-        
-        featurespec = self.featurespec
-        return featurespec
-    
+    def __getitem__(self, index):
+        # block号
+        newest_json_index = index // (ENTRIES_PER_JSON * ALL_SAMPLES_PER_ENTRY)
+        entry_offset = index % (ENTRIES_PER_JSON * ALL_SAMPLES_PER_ENTRY)
+        newest_entry_index = entry_offset // ALL_SAMPLES_PER_ENTRY
+        newest_fab_index = entry_offset % ALL_SAMPLES_PER_ENTRY
+
+        if not (self.curr_json_index == newest_json_index):
+            self.curr_json_index = newest_json_index
+            f = open(clean_dir + '{}'.format(cleanfolder[newest_json_index]))
+            self.spec_block = np.array(json.load(f)).transpose(1,0,2,3)
+
+        if not (self.curr_entry_index == newest_entry_index) or not (self.curr_json_index == newest_json_index):
+            self.curr_entry_index = newest_entry_index
+            self.f_a_b = gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block)
+
+        if not (self.curr_fab_index == newest_fab_index):
+            self.curr_fab_index = newest_fab_index
+
+        spec = self.f_a_b[newest_fab_index]
+
+        return feat, a, b
+
 #=============================================
 #        Define Dataloader
 #=============================================
 
-
-mixset = mixDataSet( mix_dir, target_spec_dir, target_label_dir)
+mixset = trainDataSet()
 
 mixloader = torch.utils.data.DataLoader(dataset = mixset,
     batch_size = bs,
     shuffle = False)
+
+
 
 #=============================================
 #        Model
@@ -201,11 +257,16 @@ class featureNet(nn.Module):
         feat = F.relu(self.fc2(x))
         x = self.fc3(feat)
         
-        return feat, F.log_softmax(x, dim = 1)
+        return feat #, F.log_softmax(x, dim = 1)
     
 featurenet = featureNet()
-featurenet.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/feat.pkl'))
-    
+try:
+    featurenet.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/feat.pkl'))
+except:
+    print("F-model not available")
+
+
+
 '''ANet'''
 class ANet(nn.Module):
     
@@ -250,7 +311,12 @@ class ANet(nn.Module):
         return a7, a6, a5, a4, a3, a2
 
 A_model = ANet()
-A_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/A.pkl'))
+try:
+    A_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/A.pkl'))
+except:
+    print("A-model not available")
+print(A_model)
+
 
 
 ''' ResBlock '''
@@ -314,15 +380,12 @@ class ResTranspose(nn.Module):
 
         return x2
 
-
 def initialize(m):
     if isinstance(m, nn.Conv2d):
         init.xavier_normal_(m.weight)
         init.constant_(m.bias, 0)
     if isinstance(m, nn.ConvTranspose2d):
         init.xavier_normal_(m.weight)
-
-
 
 class ResDAE(nn.Module):
     def __init__(self):
@@ -591,20 +654,22 @@ class ResDAE(nn.Module):
 
 
 Res_model = ResDAE()
-#Res_model = torch.load(root_dir + 'recover/SSIM-CONV/DAE_SSIM.pkl')
-Res_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/res.pkl'))
+try:
+    Res_model.load_state_dict(torch.load(root_dir + 'cocktail/combinemodel_fullconv/res.pkl'))
+except:
+    print("Res-model not available")
+print(Res_model)
 
 
-# print (model)
 
 #=============================================
 #        Optimizer
 #=============================================
 
-#import pytorch_ssim
-criterion = pytorch_ssim.SSIM()
-criterion1 = nn.MSELoss()
+criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(Res_model.parameters(), lr = lr) #, momentum = mom)
+
+
 
 #=============================================
 #        Loss Record
@@ -623,40 +688,29 @@ Res_model.train()
 for epo in range(epoch):
     for i, data in enumerate(mixloader, 0):
 
-    
         # get mix spec & label
-        mix_spec, target_spec, target_label = data
-        inputs = Variable(mix_spec)
-        targets = target_spec
-        
+        mix_specs, target_specs, feat_data = data
+
         optimizer.zero_grad()
-        
+
         # get feature
-        featureset = featureDataSet(clean_dir, int(target_label))
-        feat_data = featureset.__getitem__()[2]  
-        feat, _ = featurenet(feat_data) 
+        feats = featurenet(feat_data)
 
         # feed in feature to ANet
-        att = A_model(feat)
-        
+        a7, a6, a5, a4, a3, a2 = A_model(feats)
+
         # Res_model
-        top = Res_model.upward(inputs) #+ white(inputs))
-        outputs = Res_model.downward(top, shortcut = True)
-        outputs = outputs.view(bs, 1, 256, 128)
-        
-        
-        target = targets.view(bs, 1, 256, 128)
-        loss = - criterion(outputs, target) + criterion1(outputs, target)
-        ssim_value = - loss.data.item()
+        tops = Res_model.upward(mix_specs, a7, a6, a5, a4, a3, a2) #+ white(inputs))
+        outputs = Res_model.downward(tops, shortcut = True)
+
+        loss = criterion(outputs, target_specs)
 
         loss.backward()
         optimizer.step()
-        
+
         loss_record.append(loss.item())
         print (i)
-    
-    
-    
+
 
         if i % 20 == 0:
 
@@ -683,14 +737,12 @@ for epo in range(epoch):
     plt.savefig(root_dir + 'cocktail/combinemodel_fullconv/')
     
     print ('[%d] loss: %.3f' % (epo, loss.item()))
-#            print ('[%d, %5d] ssim: %.3f' % (epo, i, ssim_value))
    
     gc.collect()
     plt.close("all")
 
 
 
-    
 #=============================================
 #        Save Model & Loss
 #=============================================
