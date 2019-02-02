@@ -152,7 +152,7 @@ class trainDataSet(BlockBasedDataSet):
     # f ：随机一个下标，取目标编号的spectrogram
 
     def __init__(self):
-        super(self, trainDataSet).__init__(train_dir)
+        super(trainDataSet, self).__init__(train_dir)
 
     def __len__(self):
         return ENTRIES_PER_JSON * RANDOM_SAMPLES_PER_ENTRY * SPEC_TRAIN_JSONS // BS
@@ -200,7 +200,7 @@ class testDataSet(BlockBasedDataSet):
     # 从block中，取出entry
     # 从entry中，取出一系列f-a-b
     def __init__(self):
-        super(self, testDataSet).__init__(test_dir)
+        super(testDataSet, self).__init__(test_dir)
 
     def __len__(self):
         return ENTRIES_PER_JSON * ENTRIES_PER_JSON * ALL_SAMPLES_PER_ENTRY
