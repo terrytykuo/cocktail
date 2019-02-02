@@ -132,10 +132,10 @@ class trainDataSet(Dataset):
         # f ：随机一个下标，取目标编号的spectrogram
         self.feat_block = []
         for block in feat_train_block:
-            self.feat_block.append( json.load(open(train_dir + block, "rb")).reshape(1,0,2,3) )
-        self.feat_block = np.concatenate( np.array(self.feat_block), axis=1)
+            self.feat_block.append( json.load(open(train_dir + block, "rb")) )
+        self.feat_block = np.concatenate( np.array(self.feat_block), axis=2).transpose(1,0,2,3)
 
-        self.spec_block = json.load(open(train_dir + spec_train_blocks[0], "rb")).reshape(1,0,2,3)
+        self.spec_block = json.load(open(train_dir + spec_train_blocks[0], "rb")).transpose(1,0,2,3)
         self.f_a_b = gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)
         
         self.block_index = 0
@@ -190,10 +190,10 @@ class testDataSet(Dataset):
     def __init__(self):
         self.feat_block = []
         for block in feat_test_block:
-            self.feat_block.append( json.load(open(test_dir + block, "rb")).reshape(1,0,2,3) )
+            self.feat_block.append( json.load(open(test_dir + block, "rb")).transpose(1,0,2,3) )
         self.feat_block = np.concatenate( np.array(self.feat_block), axis=1)
 
-        self.spec_block = json.load(open(test_dir + spec_test_blocks[0], "rb")).reshape(1,0,2,3)
+        self.spec_block = json.load(open(test_dir + spec_test_blocks[0], "rb")).transpose(1,0,2,3)
         self.f_a_b = gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)
 
         self.curr_json_index = 0
