@@ -123,24 +123,36 @@ def gen_f_a_b(spec_block, entry_index, feat_block):
             ].reshape(1, RANDOM_SAMPLES_PER_ENTRY, 256, 128)
     return np.concatenate((feats, a_b), axis=0)
 
-class trainDataSet(Dataset):
 
-    def __init__(self):
-        # 不变性：
-        # 总保有一份 spec_block ，一份 feat_block
-        # 每次访问时，有长为bs的f-a-b列表，每次取下标从列表中取得
-        # f ：随机一个下标，取目标编号的spectrogram
+class BlockBasedDataSet(Dataset):
+    def __init__(self, block_dir):
         self.feat_block = []
         for block in feat_train_block:
-            self.feat_block.append( json.load(open(train_dir + block, "rb")) )
+            self.feat_block.append( json.load(open(block_dir + block, "rb")) )
         self.feat_block = np.concatenate( np.array(self.feat_block), axis=2).transpose(1,0,2,3)
 
-        self.spec_block = json.load(open(train_dir + spec_train_blocks[0], "rb")).transpose(1,0,2,3)
+        self.spec_block = np.array(json.load(open(block_dir + spec_train_blocks[0], "rb"))).transpose(1,0,2,3)
         self.f_a_b = gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)
-        
-        self.block_index = 0
-        self.entry_index = 0
-        self.f_a_b_index = 0
+
+        self.curr_json_index = 0
+        self.curr_entry_index = 0
+        self.curr_fab_index = 0
+
+    def __len__(self):
+        return 0
+
+    def __getitem__(self, index):
+        return None
+
+class trainDataSet(BlockBasedDataSet):
+
+    # 不变性：
+    # 总保有一份 spec_block ，一份 feat_block
+    # 每次访问时，有长为bs的f-a-b列表，每次取下标从列表中取得
+    # f ：随机一个下标，取目标编号的spectrogram
+
+    def __init__(self):
+        super(self, trainDataSet).__init__(train_dir)
 
     def __len__(self):
         return ENTRIES_PER_JSON * RANDOM_SAMPLES_PER_ENTRY * SPEC_TRAIN_JSONS // BS
@@ -148,57 +160,47 @@ class trainDataSet(Dataset):
     def __getitem__(self, dummy_index): # index is dummy, cuz doing ordered traverse
         '''
         数据规格协议：
-        - block块，标号为self.block_index；需支持 get_next_entry ，内部方法： get_next_block
+        - block块，标号为self.curr_json_index；需支持 get_next_entry ，内部方法： get_next_block
             - entry流，标号为self.entry_index；需支持 gen_fab
-        - fab块：通过 self.f_a_b_index 取下标；需支持 get_next_batch ，内部方法： get_next_entry 与拼接
+        - fab块：通过 self.curr_fab_index 取下标；需支持 get_next_batch ，内部方法： get_next_entry 与拼接
             - batch流：顺序遍历无标号
         '''
         # to next batch
         item = None
-        if self.f_a_b_index + BS < RANDOM_SAMPLES_PER_ENTRY:
-            item = self.f_a_b[self.f_a_b_index : self.f_a_b_index + BS]
+        if self.curr_fab_index + BS < RANDOM_SAMPLES_PER_ENTRY:
+            item = self.f_a_b[self.curr_fab_index : self.curr_fab_index + BS]
         else: # load next entry
-            self.f_a_b_index = 0
-            self.entry_index += 1
+            self.curr_fab_index = 0
+            self.curr_entry_index += 1
 
-            if self.entry_index < ENTRIES_PER_JSON:
-                self.entry_index += 1
+            if self.curr_entry_index < ENTRIES_PER_JSON:
+                self.curr_entry_index += 1
             else: # load next block
-                self.block_index += 1
-                self.spec_block = json.load(open(train_dir + spec_train_blocks[self.block_index], "rb")).reshape(1,0,2,3)
-                self.entry_index = 0
+                self.curr_json_index += 1
+                self.spec_block = json.load(open(train_dir + spec_train_blocks[self.curr_json_index], "rb")).reshape(1,0,2,3)
+                self.curr_entry_index = 0
 
-            if self.f_a_b_index < RANDOM_SAMPLES_PER_ENTRY:
+            if self.curr_fab_index < RANDOM_SAMPLES_PER_ENTRY:
                 self.f_a_b = np.concatenate(
-                    ( self.f_a_b[self.f_a_b_index:RANDOM_SAMPLES_PER_ENTRY], self.gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)), 
+                    ( self.f_a_b[self.curr_fab_index:RANDOM_SAMPLES_PER_ENTRY], self.gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block)), 
                     axis=1
                 )
             else:
-                self.f_a_b = self.gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)
+                self.f_a_b = self.gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block)
 
-            item = self.f_a_b[self.f_a_b_index : self.f_a_b_index + BS]
+            fab = self.f_a_b[self.curr_fab_index : self.curr_fab_index + BS]
 
-        self.f_a_b_index += BS
+        self.curr_fab_index += BS
 
-        return item
+        return fab
 
 
-class testDataSet(Dataset):
+class testDataSet(BlockBasedDataSet):
     # 不用考虑batch了，直接一个一个读取
     # 从block中，取出entry
     # 从entry中，取出一系列f-a-b
     def __init__(self):
-        self.feat_block = []
-        for block in feat_test_block:
-            self.feat_block.append( json.load(open(test_dir + block, "rb")).transpose(1,0,2,3) )
-        self.feat_block = np.concatenate( np.array(self.feat_block), axis=1)
-
-        self.spec_block = json.load(open(test_dir + spec_test_blocks[0], "rb")).transpose(1,0,2,3)
-        self.f_a_b = gen_f_a_b(self.spec_block, self.entry_index, self.feat_block)
-
-        self.curr_json_index = 0
-        self.curr_entry_index = 0
-        self.curr_fab_index = 0
+        super(self, testDataSet).__init__(test_dir)
 
     def __len__(self):
         return ENTRIES_PER_JSON * ENTRIES_PER_JSON * ALL_SAMPLES_PER_ENTRY
@@ -219,12 +221,11 @@ class testDataSet(Dataset):
             self.curr_entry_index = newest_entry_index
             self.f_a_b = gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block)
 
-        if not (self.curr_fab_index == newest_fab_index):
-            self.curr_fab_index = newest_fab_index
+        self.curr_fab_index = newest_fab_index
 
-        spec = self.f_a_b[newest_fab_index]
+        fab = self.f_a_b[newest_fab_index]
 
-        return feat
+        return fab
 
 #=============================================
 #        Define Dataloader
@@ -232,8 +233,8 @@ class testDataSet(Dataset):
 
 mixset = trainDataSet()
 mixloader = torch.utils.data.DataLoader(dataset = mixset,
-    batch_size = bs,
-    shuffle = False)
+    batch_size = 1,
+    shuffle = False) # batch size is controlled by BS in hard-code
 
 testset = testDataSet()
 testloader = torch.utils.data.DataLoader(dataset = testset,
