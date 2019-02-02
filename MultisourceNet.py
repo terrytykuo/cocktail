@@ -98,7 +98,7 @@ def gen_all_pairs():
         for j in range(CLASSES):
             if(i==j): continue
             all_pairs.append([i, j])
-    return all_pairs
+    return np.array(all_pairs)
 
 all_combinations = gen_all_pairs()
 all_combination_indices = np.arange(CLASSES * (CLASSES-1) // 2)
