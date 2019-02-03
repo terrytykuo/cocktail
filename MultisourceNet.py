@@ -115,6 +115,7 @@ def gen_rand_pairs(num_pairs):
 def gen_f_a_b(spec_block, entry_index, feat_block):
     a_b_indexes = gen_rand_pairs(RANDOM_SAMPLES_PER_ENTRY).transpose()
     a_index_list, b_index_list = a_b_indexes[0], a_b_indexes[1]
+    print(a_index_list.shape)
     a_b = np.array([
         spec_block[entry_index, a_index_list], 
         spec_block[entry_index, b_index_list]
