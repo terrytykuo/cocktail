@@ -132,7 +132,9 @@ class BlockBasedDataSet(Dataset):
         self.feat_block = []
         for block in feat_train_block:
             self.feat_block.append( json.load(open(block_dir + block, "rb")) )
-        self.feat_block = np.concatenate( np.array(self.feat_block), axis=2).transpose(1,0,2,3)
+        self.feat_block = np.concatenate( np.array(self.feat_block), axis=1).transpose(1,0,2,3)
+
+        print(self.feat_block.shape)
 
         self.curr_json_index = 0
         self.curr_entry_index = 0
