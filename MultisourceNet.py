@@ -141,9 +141,9 @@ def gen_f_a_b(spec_block, entry_index, feat_block, random_mode=True):
 
     
 class BlockBasedDataSet(Dataset):
-    def __init__(self, block_dir, gen_fab_random_mode):
+    def __init__(self, block_dir, feat_block_list, gen_fab_random_mode):
         self.feat_block = []
-        for block in feat_train_block:
+        for block in feat_block_list:
             self.feat_block.append( json.load(open(block_dir + block, "r")) )
         self.feat_block = np.concatenate( np.array(self.feat_block), axis=1).transpose(1,0,2,3)
 
@@ -169,7 +169,7 @@ class trainDataSet(BlockBasedDataSet):
     # f ：随机一个下标，取目标编号的spectrogram
 
     def __init__(self):
-        super(trainDataSet, self).__init__(train_dir, gen_fab_random_mode=True)
+        super(trainDataSet, self).__init__(train_dir, feat_train_block, gen_fab_random_mode=True)
 
     def __len__(self):
         return ENTRIES_PER_JSON * RANDOM_SAMPLES_PER_ENTRY * SPEC_TRAIN_JSONS // BS
@@ -228,7 +228,7 @@ class testDataSet(BlockBasedDataSet):
     # 从block中，取出entry
     # 从entry中，取出一系列f-a-b
     def __init__(self):
-        super(testDataSet, self).__init__(test_dir, gen_fab_random_mode=False)
+        super(testDataSet, self).__init__(test_dir, feat_test_block, gen_fab_random_mode=False)
 
     def __len__(self):
         return ENTRIES_PER_JSON * SPEC_TEST_JSONS * ALL_SAMPLES_PER_ENTRY
