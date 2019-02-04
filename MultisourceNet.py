@@ -73,8 +73,8 @@ def list_json_in_dir(dir):
     return temp
 
 all_json_in_train_dir = list_json_in_dir(train_dir)
-spec_train_blocks = all_json_in_train_dir[:19]
-feat_train_block = all_json_in_train_dir[19:]
+spec_train_blocks = all_json_in_train_dir[:21]
+feat_train_block = all_json_in_train_dir[21:]
 
 all_json_in_test_dir = list_json_in_dir(test_dir)
 spec_test_blocks = all_json_in_test_dir[:3]
