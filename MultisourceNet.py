@@ -135,6 +135,26 @@ def gen_f_a_b(spec_block, entry_index, feat_block):
             ].reshape(1, RANDOM_SAMPLES_PER_ENTRY, 256, 128)
     return np.concatenate((feats, a_b), axis=0)
 
+class BlockBasedDataSet(Dataset):
+    def __init__(self, block_dir, gen_fab_random_mode):
+        self.feat_block = []
+        for block in feat_train_block:
+            self.feat_block.append( json.load(open(block_dir + block, "r")) )
+        self.feat_block = np.concatenate( np.array(self.feat_block), axis=1).transpose(1,0,2,3)
+
+        self.curr_json_index = 0
+        self.curr_entry_index = 0
+
+        self.spec_block = np.array(json.load(open(block_dir + spec_train_blocks[0], "r"))).transpose(1,0,2,3)
+        self.f_a_b = gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block, random_mode=gen_fab_random_mode)
+
+        self.curr_fab_index = 0
+
+    def __len__(self):
+        return 0
+
+    def __getitem__(self, index):
+        return None
 
 class trainDataSet(BlockBasedDataSet):
 
