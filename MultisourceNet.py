@@ -59,7 +59,7 @@ train_dir = root_dir + 'cleanblock/'
 test_dir  = root_dir + 'clean_test/'
 
 # 22 in train dir, 4 in test dir
-# 22 = 3+19, 4 = 2+2
+# 22 = 3+19, 4 = 1+3
 
 def list_json_in_dir(dir):
     temp = os.listdir(train_dir)
@@ -74,11 +74,11 @@ def list_json_in_dir(dir):
 
 all_json_in_train_dir = list_json_in_dir(train_dir)
 spec_train_blocks = all_json_in_train_dir[:19]
-spec_test_blocks = all_json_in_train_dir[19:]
+feat_train_block = all_json_in_train_dir[19:]
 
 all_json_in_test_dir = list_json_in_dir(test_dir)
-feat_train_block = all_json_in_test_dir[:2]
-feat_test_block = all_json_in_test_dir[2:]
+spec_test_blocks = all_json_in_test_dir[:3]
+feat_test_block = all_json_in_test_dir[3:]
 
 #=============================================
 #       Define Datasets
