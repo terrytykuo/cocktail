@@ -62,7 +62,7 @@ test_dir  = root_dir + 'clean_test/'
 # 22 = 3+19, 4 = 1+3
 
 def list_json_in_dir(dir):
-    temp = os.listdir(train_dir)
+    temp = os.listdir(dir)
     temp.sort()
     i = 0
     for t in temp:
