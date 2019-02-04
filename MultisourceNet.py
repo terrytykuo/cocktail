@@ -121,10 +121,14 @@ def gen_rand_pairs(num_pairs):
     ]
     return chosen
 
-def gen_f_a_b(spec_block, entry_index, feat_block):
-    a_b_indexes = gen_rand_pairs(RANDOM_SAMPLES_PER_ENTRY).transpose()
+def gen_f_a_b(spec_block, entry_index, feat_block, random_mode=True):
+    if random_mode: 
+        samples_selected = RANDOM_SAMPLES_PER_ENTRY
+    else:
+        samples_selected = ALL_SAMPLES_PER_ENTRY
+    a_b_indexes = gen_rand_pairs(samples_selected).transpose()
     a_index_list, b_index_list = a_b_indexes[0], a_b_indexes[1]
-    print(a_index_list.shape)
+
     a_b = np.array([
         spec_block[entry_index, a_index_list], 
         spec_block[entry_index, b_index_list]
@@ -132,9 +136,10 @@ def gen_f_a_b(spec_block, entry_index, feat_block):
     feats = feat_block[
                 np.random.randint(feat_block.shape[0]),
                 a_index_list
-            ].reshape(1, RANDOM_SAMPLES_PER_ENTRY, 256, 128)
+            ].reshape(1, samples_selected, 256, 128)
     return np.concatenate((feats, a_b), axis=0)
 
+    
 class BlockBasedDataSet(Dataset):
     def __init__(self, block_dir, gen_fab_random_mode):
         self.feat_block = []
