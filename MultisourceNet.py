@@ -732,9 +732,14 @@ for epo in range(epoch):
     for i, data in enumerate(mixloader, 0):
 
         # get mix spec & label
+        feat_data， a_specs, b_specs = data
+
         feat_data = feat_data.squeeze()
-        mix_specs = mix_specs.squeeze()
-        target_specs = target_specs.squeeze()
+        a_specs = a_specs.squeeze()
+        b_specs = b_specs.squeeze()
+
+        mix_specs = a_specs + b_specs
+        target_specs = a_specs
 
         feat_optimizer.zero_grad()
         anet_optimizer.zero_grad()
@@ -780,9 +785,15 @@ for epo in range(epoch):
     # test
     Res_model.eval()
     for i, data in enumerate(testloader, 0):
-        feat_data, mix_spec, target_spec = data
+        feat_data， a_specs, b_specs = data
 
-        target_spec = target_spec.squeeze()
+        feat_data = feat_data.squeeze()
+        a_specs = a_specs.squeeze()
+        b_specs = b_specs.squeeze()
+
+        mix_specs = a_specs + b_specs
+        target_specs = a_specs
+
         feat = featurenet(feat_data)
 
         a7, a6, a5, a4, a3, a2 = A_model(feat)
