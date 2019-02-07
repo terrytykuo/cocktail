@@ -143,7 +143,7 @@ def gen_f_a_b(spec_block, entry_index, feat_block, random_mode=True):
 class BlockBasedDataSet(Dataset):
     def __init__(self, block_dir, feat_block_list, gen_fab_random_mode):
         self.feat_block = []
-        print(len(self.feat_block))
+        print(len(feat_block_list))
         for block in feat_block_list:
             self.feat_block.append( json.load(open(block_dir + block, "r")) )
         self.feat_block = np.concatenate( np.array(self.feat_block), axis=1 ).transpose(1,0,2,3)
