@@ -763,7 +763,7 @@ for epo in range(epoch):
         anet_optimizer.step()
         feat_optimizer.step()
 
-        loss_record.append(loss_train.item())
+        # loss_record.append(loss_train.item())
         print ("training batch #{}".format(i))
 
         # if i % 20 == 0:
@@ -803,7 +803,7 @@ for epo in range(epoch):
 
         loss_test = criterion(output, target_spec)
 
-        test_record.append(loss_test.item())
+        # test_record.append(loss_test.item())
 
     # plt.figure(figsize = (20, 10))
     # plt.plot(loss_record)
