@@ -729,58 +729,58 @@ epoch_test = []
 Res_model.train()
 for epo in range(epoch):
     # train
-    # for i, data in enumerate(mixloader, 0):
+    for i, data in enumerate(mixloader, 0):
 
-    #     # get mix spec & label
-    #     feat_data, a_specs, b_specs = data
+        # get mix spec & label
+        feat_data, a_specs, b_specs = data
 
-    #     feat_data = feat_data.squeeze()
-    #     a_specs = a_specs.squeeze()
-    #     b_specs = b_specs.squeeze()
+        feat_data = feat_data.squeeze()
+        a_specs = a_specs.squeeze()
+        b_specs = b_specs.squeeze()
 
-    #     mix_specs = a_specs + b_specs
-    #     target_specs = a_specs
+        mix_specs = a_specs + b_specs
+        target_specs = a_specs
 
-    #     feat_optimizer.zero_grad()
-    #     anet_optimizer.zero_grad()
-    #     res_optimizer.zero_grad()
+        feat_optimizer.zero_grad()
+        anet_optimizer.zero_grad()
+        res_optimizer.zero_grad()
 
-    #     # get feature
-    #     print(feat_data.shape)
-    #     feats = featurenet(feat_data)
+        # get feature
+        print(feat_data.shape)
+        feats = featurenet(feat_data)
 
-    #     # feed in feature to ANet
-    #     a7, a6, a5, a4, a3, a2 = A_model(feats)
+        # feed in feature to ANet
+        a7, a6, a5, a4, a3, a2 = A_model(feats)
 
-    #     # Res_model
-    #     tops = Res_model.upward(mix_specs, a7, a6, a5, a4, a3, a2) #+ white(inputs))
-    #     outputs = Res_model.downward(tops, shortcut = True)
+        # Res_model
+        tops = Res_model.upward(mix_specs, a7, a6, a5, a4, a3, a2) #+ white(inputs))
+        outputs = Res_model.downward(tops, shortcut = True)
 
-    #     loss_train = criterion(outputs, target_specs)
+        loss_train = criterion(outputs, target_specs)
 
-    #     loss_train.backward()
-    #     res_optimizer.step()
-    #     anet_optimizer.step()
-    #     feat_optimizer.step()
+        loss_train.backward()
+        res_optimizer.step()
+        anet_optimizer.step()
+        feat_optimizer.step()
 
-    #     loss_record.append(loss_train.item())
-    #     print ("training batch #{}".format(i))
+        loss_record.append(loss_train.item())
+        print ("training batch #{}".format(i))
 
-    #     if i % 20 == 0:
+        # if i % 20 == 0:
 
-    #         print ('[%d, %2d] loss_train: %.3f' % (epo, i, loss_train.item()))
+        #     print ('[%d, %2d] loss_train: %.3f' % (epo, i, loss_train.item()))
 
-    #         inn = mix_specs[0].view(256, 128).detach().numpy() * 255
-    #         np.clip(inn, np.min(inn), 1)
-    #         cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_mix.png", inn)
+        #     inn = mix_specs[0].view(256, 128).detach().numpy() * 255
+        #     np.clip(inn, np.min(inn), 1)
+        #     cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_mix.png", inn)
 
-    #         tarr = target_specs[0].view(256, 128).detach().numpy() * 255
-    #         np.clip(tarr, np.min(tarr), 1)
-    #         cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_tar.png", tarr)
+        #     tarr = target_specs[0].view(256, 128).detach().numpy() * 255
+        #     np.clip(tarr, np.min(tarr), 1)
+        #     cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_tar.png", tarr)
 
-    #         outt = outputs[0].view(256, 128).detach().numpy() * 255
-    #         np.clip(outt, np.min(outt), 1)
-    #         cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_sep.png", outt)
+        #     outt = outputs[0].view(256, 128).detach().numpy() * 255
+        #     np.clip(outt, np.min(outt), 1)
+        #     cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_sep.png", outt)
 
     # test
     Res_model.eval()
@@ -805,33 +805,33 @@ for epo in range(epoch):
 
         test_record.append(loss_test.item())
 
-    plt.figure(figsize = (20, 10))
-    plt.plot(loss_record)
-    plt.xlabel('iterations')
-    plt.ylabel('loss')
-    plt.savefig(root_dir + 'cocktail/training.png')
-    gc.collect()
-    plt.close("all")
+    # plt.figure(figsize = (20, 10))
+    # plt.plot(loss_record)
+    # plt.xlabel('iterations')
+    # plt.ylabel('loss')
+    # plt.savefig(root_dir + 'cocktail/training.png')
+    # gc.collect()
+    # plt.close("all")
 
-    plt.figure(figsize = (20, 10))
-    plt.plot(test_record)
-    plt.xlabel('iterations')
-    plt.ylabel('loss')
-    plt.savefig(root_dir + 'cocktail/testing.png')
-    gc.collect()
-    plt.close("all")
+    # plt.figure(figsize = (20, 10))
+    # plt.plot(test_record)
+    # plt.xlabel('iterations')
+    # plt.ylabel('loss')
+    # plt.savefig(root_dir + 'cocktail/testing.png')
+    # gc.collect()
+    # plt.close("all")
 
-    train_average_loss = np.average(loss_record)
-    test_average_loss = np.average(test_record)
+    # train_average_loss = np.average(loss_record)
+    # test_average_loss = np.average(test_record)
 
-    epoch_train.append(train_average_loss)
-    epoch_test.append(test_average_loss)
+    # epoch_train.append(train_average_loss)
+    # epoch_test.append(test_average_loss)
 
-    print ("train finish epoch #{}, loss average {}".format(epo, train_average_loss))
-    print ("test finish epoch #{}, loss average {}".format(epo, test_average_loss))
+    # print ("train finish epoch #{}, loss average {}".format(epo, train_average_loss))
+    # print ("test finish epoch #{}, loss average {}".format(epo, test_average_loss))
 
-    loss_record = []
-    test_record = []
+    # loss_record = []
+    # test_record = []
 
 
 #=============================================
