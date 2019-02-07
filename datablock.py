@@ -11,15 +11,12 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
 
 
 
-clean_dir = '/home/tk/cocktail/clean/'
+clean_dir = '/home/tk/cocktail/cleanblock/'
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
 
-<<<<<<< HEAD
-for count in range(10, 20):
-=======
-for count in range(20):
->>>>>>> master
+for count in range(20, 24):
+
 
 	file_list = []
 	clean_list = []
@@ -44,6 +41,6 @@ for count in range(20):
 	print ('file_list = ', file_list)
 
 	for k in file_list:
-	 	os.remove('/home/tk/cocktail/clean/' + k)
+	 	os.remove('/home/tk/cocktail/cleanblock/' + k)
 
 

@@ -7,8 +7,7 @@ import json
 root_dir = '/home/tk/cocktail/'
 sliced_pool_path = '/home/tk/cocktail/sliced_pool/'
 mixed_pool_path =  '/home/tk/cocktail/mix_pool/'
-clean_path = '/home/tk/cocktail/clean/'
-cleanlabel_path = '/home/tk/cocktail/clean_labels/'
+clean_path = '/home/tk/cocktail/cleanblock/'
 
 full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12', 
               'constructivebeekeeping',
@@ -18,14 +17,10 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
               'romancecommonplace', 'travelstoriesretold']
               
               
-<<<<<<< HEAD
-blocks = 10
-=======
-blocks = 20
->>>>>>> master
+blocks = 4
 datapoints = 100
 
-for i in range(blocks):
+for i in range(20, 24):
     for ind, name in enumerate(full_audio):
         
         all_clean_spec = []
@@ -61,19 +56,5 @@ for i in range(blocks):
 #        print ("label = ", name , ", shape = ", all_clean_label.shape)
 
     
-<<<<<<< HEAD
         with open(clean_path + name + str(i) + '.json', 'w') as jh:
             json.dump(all_clean_spec.tolist(), jh)
-
-        with open(clean_path + name + str(i) + '.json', 'w') as jh:
-            json.dump(all_clean_label.tolist(), jh)
-=======
-        with open(root_dir + 'clean/' + name + str(i) + '.json', 'w') as jh:
-            json.dump(all_clean_spec.tolist(), jh)
-
-#        with open(root_dir + 'clean_labels/' + name + str(i) + '.json', 'w') as jh:
-#            json.dump(all_clean_label.tolist(), jh)
->>>>>>> master
-
-
-
