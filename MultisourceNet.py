@@ -141,7 +141,7 @@ def gen_f_a_b(spec_block, entry_index, feat_block, random_mode=True):
 
     
 class BlockBasedDataSet(Dataset):
-    def __init__(self, block_dir, feat_block_list, gen_fab_random_mode):
+    def __init__(self, block_dir, feat_block_list, spec_block_list, gen_fab_random_mode):
         self.feat_block = []
         for block in feat_block_list:
             self.feat_block.append( json.load(open(block_dir + block, "r")) )
@@ -150,7 +150,7 @@ class BlockBasedDataSet(Dataset):
         self.curr_json_index = 0
         self.curr_entry_index = 0
 
-        self.spec_block = np.array(json.load(open(block_dir + spec_train_blocks[0], "r"))).transpose(1,0,2,3)
+        self.spec_block = np.array(json.load(open(block_dir + spec_block_list[0], "r"))).transpose(1,0,2,3)
         self.f_a_b = gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block, random_mode=gen_fab_random_mode)
 
         self.curr_fab_index = 0
@@ -170,7 +170,7 @@ class trainDataSet(BlockBasedDataSet):
 
     def __init__(self):
         print("trainDataSet: feature blocks: ", len(feat_train_block))
-        super(trainDataSet, self).__init__(train_dir, feat_train_block, gen_fab_random_mode=True)
+        super(trainDataSet, self).__init__(train_dir, feat_train_block, spec_train_blocks, gen_fab_random_mode=True)
 
     def __len__(self):
         return ENTRIES_PER_JSON * RANDOM_SAMPLES_PER_ENTRY * SPEC_TRAIN_JSONS // BS
@@ -230,7 +230,7 @@ class testDataSet(BlockBasedDataSet):
     # 从entry中，取出一系列f-a-b
     def __init__(self):
         print("testDataSet: feature blocks: ", len(feat_test_block))
-        super(testDataSet, self).__init__(test_dir, feat_test_block, gen_fab_random_mode=False)
+        super(testDataSet, self).__init__(test_dir, feat_test_block, spec_test_blocks, gen_fab_random_mode=False)
 
     def __len__(self):
         return ENTRIES_PER_JSON * SPEC_TEST_JSONS * ALL_SAMPLES_PER_ENTRY
