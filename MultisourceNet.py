@@ -732,7 +732,7 @@ for epo in range(epoch):
     for i, data in enumerate(mixloader, 0):
 
         # get mix spec & label
-        feat_data， a_specs, b_specs = data
+        feat_data, a_specs, b_specs = data
 
         feat_data = feat_data.squeeze()
         a_specs = a_specs.squeeze()
@@ -785,7 +785,7 @@ for epo in range(epoch):
     # test
     Res_model.eval()
     for i, data in enumerate(testloader, 0):
-        feat_data， a_specs, b_specs = data
+        feat_data, a_specs, b_specs = data
 
         feat_data = feat_data.squeeze()
         a_specs = a_specs.squeeze()
