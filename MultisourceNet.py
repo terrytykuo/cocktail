@@ -783,27 +783,27 @@ for epo in range(epoch):
             cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_sep.png", outt)
 
     # test
-    Res_model.eval()
-    for i, data in enumerate(testloader, 0):
-        feat_data, a_specs, b_specs = data
+    # Res_model.eval()
+    # for i, data in enumerate(testloader, 0):
+    #     feat_data, a_specs, b_specs = data
 
-        feat_data = feat_data.squeeze()
-        a_specs = a_specs.squeeze()
-        b_specs = b_specs.squeeze()
+    #     feat_data = feat_data.squeeze()
+    #     a_specs = a_specs.squeeze()
+    #     b_specs = b_specs.squeeze()
 
-        mix_specs = a_specs + b_specs
-        target_specs = a_specs
+    #     mix_specs = a_specs + b_specs
+    #     target_specs = a_specs
 
-        feat = featurenet(feat_data)
+    #     feat = featurenet(feat_data)
 
-        a7, a6, a5, a4, a3, a2 = A_model(feat)
+    #     a7, a6, a5, a4, a3, a2 = A_model(feat)
 
-        top = Res_model.upward(mix_spec, a7, a6, a5, a4, a3, a2) #+ white(inputs))
-        output = Res_model.downward(top, shortcut = True)
+    #     top = Res_model.upward(mix_spec, a7, a6, a5, a4, a3, a2) #+ white(inputs))
+    #     output = Res_model.downward(top, shortcut = True)
 
-        loss_test = criterion(output, target_spec)
+    #     loss_test = criterion(output, target_spec)
 
-        test_record.append(loss_test.item())
+    #     test_record.append(loss_test.item())
 
     plt.figure(figsize = (20, 10))
     plt.plot(loss_record)
