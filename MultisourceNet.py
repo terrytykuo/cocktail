@@ -144,8 +144,9 @@ class BlockBasedDataSet(Dataset):
     def __init__(self, block_dir, feat_block_list, gen_fab_random_mode):
         self.feat_block = []
         for block in feat_block_list:
+            print(147)
             self.feat_block.append( json.load(open(block_dir + block, "r")) )
-        self.feat_block = np.concatenate( np.array(self.feat_block), axis=1).transpose(1,0,2,3)
+        self.feat_block = np.concatenate( np.array(self.feat_block), axis=1 ).transpose(1,0,2,3)
 
         self.curr_json_index = 0
         self.curr_entry_index = 0
