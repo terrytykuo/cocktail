@@ -781,7 +781,7 @@ for epo in range(epoch):
         mix_specs = a_specs + b_specs
         target_specs = a_specs
 
-        feat_optimizer.zero_grad()
+        # feat_optimizer.zero_grad()
         anet_optimizer.zero_grad()
         res_optimizer.zero_grad()
 
@@ -803,7 +803,7 @@ for epo in range(epoch):
         loss_train.backward()
         res_optimizer.step()
         anet_optimizer.step()
-        feat_optimizer.step()
+        # feat_optimizer.step()
 
         loss_record.append(loss_train.item())
         print ('[%d, %2d] loss_train: %.3f' % (epo, i, loss_train.item()))
