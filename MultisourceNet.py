@@ -768,7 +768,7 @@ for epo in range(epoch):
     for i, data in enumerate(mixloader, 0):
         print ("training batch #{}".format(i))
 
-        print("\ttrainDataSet: iter begin", psutil.virtual_memory().percent)
+        # print("\ttrainDataSet: iter begin", psutil.virtual_memory().percent)
 
         # get mix spec & label
         
@@ -805,26 +805,27 @@ for epo in range(epoch):
         anet_optimizer.step()
         feat_optimizer.step()
 
-        # loss_record.append(loss_train.item())
+        loss_record.append(loss_train.item())
+        print ('[%d, %2d] loss_train: %.3f' % (epo, i, loss_train.item()))
         
-        print("\ttrainDataSet: probe", psutil.virtual_memory().percent)
+        # print("\ttrainDataSet: probe", psutil.virtual_memory().percent)
         
 
-        # if i % 20 == 0:
+        if i % 20 == 0:
 
         #     print ('[%d, %2d] loss_train: %.3f' % (epo, i, loss_train.item()))
 
-        #     inn = mix_specs[0].view(256, 128).detach().numpy() * 255
-        #     np.clip(inn, np.min(inn), 1)
-        #     cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_mix.png", inn)
+            inn = mix_specs[0].view(256, 128).detach().numpy() * 255
+            np.clip(inn, np.min(inn), 1)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_mix.png", inn)
 
-        #     tarr = target_specs[0].view(256, 128).detach().numpy() * 255
-        #     np.clip(tarr, np.min(tarr), 1)
-        #     cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_tar.png", tarr)
+            tarr = target_specs[0].view(256, 128).detach().numpy() * 255
+            np.clip(tarr, np.min(tarr), 1)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_tar.png", tarr)
 
-        #     outt = outputs[0].view(256, 128).detach().numpy() * 255
-        #     np.clip(outt, np.min(outt), 1)
-        #     cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_sep.png", outt)
+            outt = outputs[0].view(256, 128).detach().numpy() * 255
+            np.clip(outt, np.min(outt), 1)
+            cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_sep.png", outt)
 
     # test
     '''
