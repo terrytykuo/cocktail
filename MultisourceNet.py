@@ -213,14 +213,18 @@ class trainDataSet(BlockBasedDataSet):
 
             if self.curr_entry_index == ENTRIES_PER_JSON: # load next block
                 print("load next block: ")
+                new_json_index = -1
                 if self.curr_json_index + 1 < len(spec_train_blocks):
-                    self.curr_json_index += 1
+                    new_json_index += 1
                 else:
-                    self.curr_json_index = 0
-                
-                self.spec_block = np.array(
-                        json.load(open(train_dir + spec_train_blocks[self.curr_json_index], "r"))
+                    new_json_index = 0
+
+                if not new_json_index == self.curr_json_index:
+                    self.curr_json_index = new_json_index
+                    self.spec_block = np.array(
+                            json.load(open(train_dir + spec_train_blocks[new_json_index], "r"))
                     ).transpose(1,0,2,3)
+
                 self.curr_entry_index = 0
 
             if self.curr_fab_index < self.f_a_b.shape[1]:
@@ -786,7 +790,6 @@ for epo in range(epoch):
         feats = featurenet(feat_data)
 
         # feed in feature to ANet
-
         a7, a6, a5, a4, a3, a2 = A_model(feats)
 
         # Res_model
