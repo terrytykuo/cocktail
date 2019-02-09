@@ -18,6 +18,7 @@ import numpy as np
 import gc
 import cv2
 
+from bytes2human import bytes2human
 
 #=============================================
 #        Define Functions
@@ -72,13 +73,27 @@ def list_json_in_dir(dir):
             del temp[i]
     return temp
 
+'''
 all_json_in_train_dir = list_json_in_dir(train_dir)
 spec_train_blocks = all_json_in_train_dir[:21]
 feat_train_block = all_json_in_train_dir[21:]
 
 all_json_in_test_dir = list_json_in_dir(test_dir)
+spec_test_blocks = all_json_in_test_dir[:3]
+feat_test_block = all_json_in_test_dir[3:]
+'''
+
+
+
+# overfitting set
+all_json_in_train_dir = list_json_in_dir(train_dir)
+spec_train_blocks = all_json_in_train_dir[:1]
+feat_train_block = all_json_in_train_dir[1:2]
+
+all_json_in_test_dir = list_json_in_dir(test_dir)
 spec_test_blocks = all_json_in_test_dir[:1]
-feat_test_block = all_json_in_test_dir[1:]
+feat_test_block = all_json_in_test_dir[1:2]
+
 
 #=============================================
 #       Define Datasets
@@ -87,7 +102,7 @@ feat_test_block = all_json_in_test_dir[1:]
 CLASSES = 10
 RANDOM_SAMPLES_PER_ENTRY = 20
 ALL_SAMPLES_PER_ENTRY = CLASSES * (CLASSES - 1) // 2
-ENTRIES_PER_JSON = 100
+ENTRIES_PER_JSON = 50
 SPEC_TRAIN_JSONS = len(spec_train_blocks)
 SPEC_TEST_JSONS = len(spec_test_blocks)
 
@@ -139,6 +154,7 @@ def gen_f_a_b(spec_block, entry_index, feat_block, random_mode=True):
             ].reshape(1, samples_selected, 256, 128)
     return np.concatenate((feats, a_b), axis=0)
 
+import psutil
     
 class BlockBasedDataSet(Dataset):
     def __init__(self, block_dir, feat_block_list, spec_block_list, gen_fab_random_mode):
@@ -176,6 +192,7 @@ class trainDataSet(BlockBasedDataSet):
         return ENTRIES_PER_JSON * RANDOM_SAMPLES_PER_ENTRY * SPEC_TRAIN_JSONS // BS
 
     def __getitem__(self, dummy_index): # index is dummy, cuz doing ordered traverse
+        print("index: ", dummy_index * BS, dummy_index * BS + BS)
         '''
         数据规格协议：
         - block块，标号为self.curr_json_index；需支持 get_next_entry ，内部方法： get_next_block
@@ -185,6 +202,7 @@ class trainDataSet(BlockBasedDataSet):
         '''
         # to next batch
 
+        # print("\ttrainDataSet: before getitem", gc.get_count())
 
         fab = None
         if self.curr_fab_index + BS <= self.f_a_b.shape[1]:
@@ -194,15 +212,18 @@ class trainDataSet(BlockBasedDataSet):
             self.curr_entry_index += 1
 
             if self.curr_entry_index == ENTRIES_PER_JSON: # load next block
-                self.curr_json_index += 1
+                print("load next block: ")
+                if self.curr_json_index + 1 < len(spec_train_blocks):
+                    self.curr_json_index += 1
+                else:
+                    self.curr_json_index = 0
+                
                 self.spec_block = np.array(
                         json.load(open(train_dir + spec_train_blocks[self.curr_json_index], "r"))
                     ).transpose(1,0,2,3)
                 self.curr_entry_index = 0
 
             if self.curr_fab_index < self.f_a_b.shape[1]:
-                # print("shape1", self.f_a_b[:, self.curr_fab_index:self.f_a_b.shape[0]].shape)
-                # print("shape2", gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block).shape)
                 self.f_a_b = np.concatenate(
                     (   self.f_a_b[:, self.curr_fab_index:self.f_a_b.shape[1]], 
                         gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block)  ),
@@ -219,10 +240,14 @@ class trainDataSet(BlockBasedDataSet):
         # print("dummy_index = {} | block_index = {}, entry_index = {}, fab_index = {}-{}".format(
         #        dummy_index, self.curr_json_index, self.curr_entry_index, self.curr_fab_index - BS, self.curr_fab_index))
 
-        assert(fab.shape == (3, BS, 256, 128))
-        return (torch.Tensor(fab[0]).view(BS, 256, 128),
-                torch.Tensor(fab[1]).view(BS, 256, 128),
-                torch.Tensor(fab[2]).view(BS, 256, 128))
+        # print("\ttrainDataSet: before fab", gc.get_count())
+        f = torch.Tensor(fab[0]).view(BS, 256, 128)
+        a = torch.Tensor(fab[1]).view(BS, 256, 128)
+        b = torch.Tensor(fab[2]).view(BS, 256, 128)
+
+        # print("\ttrainDataSet: after getitem", gc.get_count())
+
+        return f, a, b
 
 class testDataSet(BlockBasedDataSet):
     # 不用考虑batch了，直接一个一个读取
@@ -236,6 +261,8 @@ class testDataSet(BlockBasedDataSet):
         return ENTRIES_PER_JSON * SPEC_TEST_JSONS * ALL_SAMPLES_PER_ENTRY
 
     def __getitem__(self, index):
+
+        print("\ttestDataSet: before getitem", gc.get_count())
 
         # block号
         newest_json_index = index // (ENTRIES_PER_JSON * ALL_SAMPLES_PER_ENTRY)
@@ -256,11 +283,15 @@ class testDataSet(BlockBasedDataSet):
             self.curr_entry_index = newest_entry_index
             self.f_a_b = gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block, random_mode=False)
 
-        print(self.f_a_b.shape)
+        # print(self.f_a_b.shape)
 
-        return torch.Tensor(self.f_a_b[0, newest_fab_index]), \
-               torch.Tensor(self.f_a_b[1, newest_fab_index]), \
-               torch.Tensor(self.f_a_b[2, newest_fab_index])
+        f = torch.Tensor(self.f_a_b[0, newest_fab_index])
+        a = torch.Tensor(self.f_a_b[1, newest_fab_index])
+        b = torch.Tensor(self.f_a_b[2, newest_fab_index])
+
+        print("\ttestDataSet: after getitem", gc.get_count())
+
+        return f, a, b
 
 
 #=============================================
@@ -729,9 +760,14 @@ epoch_test = []
 Res_model.train()
 for epo in range(epoch):
     # train
+    
     for i, data in enumerate(mixloader, 0):
+        print ("training batch #{}".format(i))
+
+        print("\ttrainDataSet: iter begin", psutil.virtual_memory().percent)
 
         # get mix spec & label
+        
         feat_data, a_specs, b_specs = data
 
         feat_data = feat_data.squeeze()
@@ -745,18 +781,21 @@ for epo in range(epoch):
         anet_optimizer.zero_grad()
         res_optimizer.zero_grad()
 
+
         # get feature
-        print(feat_data.shape)
         feats = featurenet(feat_data)
 
         # feed in feature to ANet
+
         a7, a6, a5, a4, a3, a2 = A_model(feats)
 
         # Res_model
         tops = Res_model.upward(mix_specs, a7, a6, a5, a4, a3, a2) #+ white(inputs))
+
         outputs = Res_model.downward(tops, shortcut = True)
 
         loss_train = criterion(outputs, target_specs)
+
 
         loss_train.backward()
         res_optimizer.step()
@@ -764,7 +803,9 @@ for epo in range(epoch):
         feat_optimizer.step()
 
         # loss_record.append(loss_train.item())
-        print ("training batch #{}".format(i))
+        
+        print("\ttrainDataSet: probe", psutil.virtual_memory().percent)
+        
 
         # if i % 20 == 0:
 
@@ -783,6 +824,7 @@ for epo in range(epoch):
         #     cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_sep.png", outt)
 
     # test
+    '''
     Res_model.eval()
     for i, data in enumerate(testloader, 0):
         feat_data, a_specs, b_specs = data
@@ -805,6 +847,7 @@ for epo in range(epoch):
 
         # test_record.append(loss_test.item())
 
+    '''
     # plt.figure(figsize = (20, 10))
     # plt.plot(loss_record)
     # plt.xlabel('iterations')

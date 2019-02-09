@@ -15,7 +15,7 @@ clean_dir = '/home/tk/cocktail/cleanblock/'
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
 
-for count in range(20, 24):
+for count in range(25, 27):
 
 
 	file_list = []

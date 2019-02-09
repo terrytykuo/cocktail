@@ -17,10 +17,10 @@ full_audio = ['birdstudybook', 'captaincook', 'cloudstudies_02_clayden_12',
               'romancecommonplace', 'travelstoriesretold']
               
               
-blocks = 4
+blocks = 2
 datapoints = 100
 
-for i in range(20, 24):
+for i in range(25, 27):
     for ind, name in enumerate(full_audio):
         
         all_clean_spec = []
