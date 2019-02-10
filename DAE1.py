@@ -28,35 +28,6 @@ mom = 0.9
 bs = 10
 
 #=============================================
-#        Define Functions
-#=============================================
-
-def odd(w):
-    return list(np.arange(1, w, step=2, dtype='long'))
-
-def even(w):
-    return list(np.arange(0, w, step=2, dtype='long'))
-
-def white(x):
-    fw, tw = x.shape[1], x.shape[2]
-
-    first = F.relu(torch.normal(mean=torch.zeros(fw, tw), std=torch.ones(fw, tw)) ) * 0.05
-    second_seed = F.relu(torch.normal(mean=torch.zeros(fw//2, tw//2), std=torch.ones(fw//2, tw//2))) * 0.03
-    second = torch.zeros(fw, tw)
-
-    row_x  = torch.zeros(int(fw//2), tw)
-    # row_x = torch.zeros(int(fw/2), tw)
-
-    row_x[:, odd(tw)]  = second_seed
-    row_x[:, even(tw)] = second_seed
-
-    second[odd(fw), :]  = row_x
-    second[even(fw), :] = row_x
-
-    return second + first
-
-
-#=============================================
 #        path
 #=============================================
 
@@ -68,19 +39,11 @@ if server == True:
 
 
 clean_dir = root_dir + 'clean/' 
-# mix_dir = root_dir + 'mix/' 
-# clean_label_dir = root_dir + 'clean_labels/' 
-# mix_label_dir = root_dir + 'mix_labels/' 
 
 cleanfolder = os.listdir(clean_dir)
 cleanfolder.sort()
 
-# mixfolder = os.listdir(mix_dir)
-# mixfolder.sort()
-
-
 clean_list = []
-# mix_list = []
 
 #=============================================
 #       Define Datasets

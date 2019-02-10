@@ -1,3 +1,0 @@
-python3 generate_sliced_pool.py
-python3 generate_seperated_clean.py
-python3 datablock.py
