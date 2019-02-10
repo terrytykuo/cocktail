@@ -100,7 +100,7 @@ feat_test_block = all_json_in_test_dir[1:2]
 #=============================================
 
 CLASSES = 10
-RANDOM_SAMPLES_PER_ENTRY = 20
+RANDOM_SAMPLES_PER_ENTRY = 45
 ALL_SAMPLES_PER_ENTRY = CLASSES * (CLASSES - 1) // 2
 ENTRIES_PER_JSON = 50
 SPEC_TRAIN_JSONS = len(spec_train_blocks)
@@ -148,8 +148,11 @@ def gen_f_a_b(spec_block, entry_index, feat_block, random_mode=True):
         spec_block[entry_index, a_index_list], 
         spec_block[entry_index, b_index_list]
     ])
+    '''
+    policy for selecting feat-source: fixed at feat_block[0] or feat_block[random]
+    '''
     feats = feat_block[
-                np.random.randint(feat_block.shape[0]),
+                0, #np.random.randint(feat_block.shape[0]),
                 a_index_list
             ].reshape(1, samples_selected, 256, 128)
     return np.concatenate((feats, a_b), axis=0)
@@ -500,7 +503,6 @@ class ResDAE(nn.Module):
         )
 
         # 16x16x32
-
         self.upward_net4 = nn.Sequential(
             nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(2,2), stride=2),
             nn.ReLU(),
@@ -511,7 +513,6 @@ class ResDAE(nn.Module):
         )
 
         # 8x8x64
-
         self.upward_net5 = nn.Sequential(
             nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(2,2), stride=2),
             nn.ReLU(),
@@ -522,7 +523,6 @@ class ResDAE(nn.Module):
         )
 
         # 4x4x128
-
         self.upward_net6 = nn.Sequential(
             nn.Conv2d(in_channels=128, out_channels=128, kernel_size=(2,2), stride=2),
             nn.ReLU(),
@@ -533,7 +533,6 @@ class ResDAE(nn.Module):
         )
 
         # 2x2x256
-
         self.upward_net7 = nn.Sequential(
             nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(2,2), stride=2),
             nn.ReLU(),
@@ -554,7 +553,6 @@ class ResDAE(nn.Module):
         )
 
         # 2x2x256
-
         self.downward_net6 = nn.Sequential(
             # 8x8x64
             ResBlock(256, 256),
@@ -781,7 +779,7 @@ for epo in range(epoch):
         mix_specs = a_specs + b_specs
         target_specs = a_specs
 
-        # feat_optimizer.zero_grad()
+        feat_optimizer.zero_grad()
         anet_optimizer.zero_grad()
         res_optimizer.zero_grad()
 
@@ -793,7 +791,7 @@ for epo in range(epoch):
         a7, a6, a5, a4, a3, a2 = A_model(feats)
 
         # Res_model
-        tops = Res_model.upward(mix_specs, a7, a6, a5, a4, a3, a2) #+ white(inputs))
+        tops = Res_model.upward(mix_specs, a7, a6, a5, a4, a3, a2)
 
         outputs = Res_model.downward(tops, shortcut = True)
 
@@ -803,7 +801,7 @@ for epo in range(epoch):
         loss_train.backward()
         res_optimizer.step()
         anet_optimizer.step()
-        # feat_optimizer.step()
+        feat_optimizer.step()
 
         loss_record.append(loss_train.item())
         print ('[%d, %2d] loss_train: %.3f' % (epo, i, loss_train.item()))
@@ -811,9 +809,8 @@ for epo in range(epoch):
         # print("\ttrainDataSet: probe", psutil.virtual_memory().percent)
         
 
-        if i % 20 == 0:
-
-        #     print ('[%d, %2d] loss_train: %.3f' % (epo, i, loss_train.item()))
+        if i % 5 == 0:
+            # print images: mix, target, attention, separated
 
             inn = mix_specs[0].view(256, 128).detach().numpy() * 255
             np.clip(inn, np.min(inn), 1)
@@ -826,6 +823,9 @@ for epo in range(epoch):
             outt = outputs[0].view(256, 128).detach().numpy() * 255
             np.clip(outt, np.min(outt), 1)
             cv2.imwrite(root_dir + 'cocktail/combinemodel_fullconv/' + str(epo)  + "_sep.png", outt)
+
+            a7.detach().numpy() * 255
+
 
     # test
     '''
