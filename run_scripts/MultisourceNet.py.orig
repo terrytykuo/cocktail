@@ -53,6 +53,19 @@ spec_test_blocks = all_json_in_test_dir[:1]
 feat_test_block = all_json_in_test_dir[1:2]
 
 
+<<<<<<< HEAD:run_scripts/MultisourceNet.py
+=======
+#=============================================
+#       Define Datasets
+#=============================================
+
+CLASSES = 10
+RANDOM_SAMPLES_PER_ENTRY = 45
+ALL_SAMPLES_PER_ENTRY = CLASSES * (CLASSES - 1) // 2
+ENTRIES_PER_JSON = 50
+SPEC_TRAIN_JSONS = len(spec_train_blocks)
+SPEC_TEST_JSONS = len(spec_test_blocks)
+>>>>>>> origin:MultisourceNet.py
 
 #=============================================
 #        Hyperparameters
@@ -64,6 +77,193 @@ mom = 0.9
 BS = 10
 BS_TEST = ALL_SAMPLES_PER_ENTRY
 
+<<<<<<< HEAD:run_scripts/MultisourceNet.py
+=======
+def gen_all_pairs():
+    all_pairs = []
+    for i in range(CLASSES):
+        for j in range(CLASSES):
+            if(i==j): continue
+            all_pairs.append([i, j])
+    return np.array(all_pairs)
+
+all_combinations = gen_all_pairs()
+all_combination_indices = np.arange(CLASSES * (CLASSES-1) // 2)
+
+def gen_rand_pairs(num_pairs):
+    ''' 至多C(10,2)对组合 '''
+    assert(2 * num_pairs <= CLASSES * (CLASSES - 1))
+    ''' 长为 num_pairs 的 list ，为 [0,CLASSES-1]x[0,CLASSES-1] 中的序偶 '''
+    chosen = all_combinations[ 
+        np.array( np.random.choice(all_combination_indices, num_pairs, replace=False) ) 
+    ]
+    return chosen
+
+def gen_f_a_b(spec_block, entry_index, feat_block, random_mode=True):
+    if random_mode: 
+        samples_selected = RANDOM_SAMPLES_PER_ENTRY
+    else:
+        samples_selected = ALL_SAMPLES_PER_ENTRY
+    a_b_indexes = gen_rand_pairs(samples_selected).transpose()
+    a_index_list, b_index_list = a_b_indexes[0], a_b_indexes[1]
+
+    a_b = np.array([
+        spec_block[entry_index, a_index_list], 
+        spec_block[entry_index, b_index_list]
+    ])
+    '''
+    policy for selecting feat-source: fixed at feat_block[0] or feat_block[random]
+    '''
+    feats = feat_block[
+                0, #np.random.randint(feat_block.shape[0]),
+                a_index_list
+            ].reshape(1, samples_selected, 256, 128)
+    return np.concatenate((feats, a_b), axis=0)
+
+import psutil
+    
+class BlockBasedDataSet(Dataset):
+    def __init__(self, block_dir, feat_block_list, spec_block_list, gen_fab_random_mode):
+        self.feat_block = []
+        for block in feat_block_list:
+            self.feat_block.append( json.load(open(block_dir + block, "r")) )
+        self.feat_block = np.concatenate( np.array(self.feat_block), axis=1 ).transpose(1,0,2,3)
+
+        self.curr_json_index = 0
+        self.curr_entry_index = 0
+
+        self.spec_block = np.array(json.load(open(block_dir + spec_block_list[0], "r"))).transpose(1,0,2,3)
+        self.f_a_b = gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block, random_mode=gen_fab_random_mode)
+
+        self.curr_fab_index = 0
+
+    def __len__(self):
+        return 0
+
+    def __getitem__(self, index):
+        return None
+
+class trainDataSet(BlockBasedDataSet):
+
+    # 不变性：
+    # 总保有一份 spec_block ，一份 feat_block
+    # 每次访问时，有长为bs的f-a-b列表，每次取下标从列表中取得
+    # f ：随机一个下标，取目标编号的spectrogram
+
+    def __init__(self):
+        print("trainDataSet: feature blocks: ", len(feat_train_block))
+        super(trainDataSet, self).__init__(train_dir, feat_train_block, spec_train_blocks, gen_fab_random_mode=True)
+
+    def __len__(self):
+        return ENTRIES_PER_JSON * RANDOM_SAMPLES_PER_ENTRY * SPEC_TRAIN_JSONS // BS
+
+    def __getitem__(self, dummy_index): # index is dummy, cuz doing ordered traverse
+        print("index: ", dummy_index * BS, dummy_index * BS + BS)
+        '''
+        数据规格协议：
+        - block块，标号为self.curr_json_index；需支持 get_next_entry ，内部方法： get_next_block
+            - entry流，标号为self.entry_index；需支持 gen_fab
+        - fab块：通过 self.curr_fab_index 取下标；需支持 get_next_batch ，内部方法： get_next_entry 与拼接
+            - batch流：顺序遍历无标号
+        '''
+        # to next batch
+
+        # print("\ttrainDataSet: before getitem", gc.get_count())
+
+        fab = None
+        if self.curr_fab_index + BS <= self.f_a_b.shape[1]:
+            fab = self.f_a_b[:, self.curr_fab_index : self.curr_fab_index + BS]
+            self.curr_fab_index += BS
+        else: # load next entry
+            self.curr_entry_index += 1
+
+            if self.curr_entry_index == ENTRIES_PER_JSON: # load next block
+                print("load next block: ")
+                new_json_index = -1
+                if self.curr_json_index + 1 < len(spec_train_blocks):
+                    new_json_index += 1
+                else:
+                    new_json_index = 0
+
+                if not new_json_index == self.curr_json_index:
+                    self.curr_json_index = new_json_index
+                    self.spec_block = np.array(
+                            json.load(open(train_dir + spec_train_blocks[new_json_index], "r"))
+                    ).transpose(1,0,2,3)
+
+                self.curr_entry_index = 0
+
+            if self.curr_fab_index < self.f_a_b.shape[1]:
+                self.f_a_b = np.concatenate(
+                    (   self.f_a_b[:, self.curr_fab_index:self.f_a_b.shape[1]], 
+                        gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block)  ),
+                    axis=1
+                )
+            else:
+                self.f_a_b = gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block)
+
+            self.curr_fab_index = 0
+            fab = self.f_a_b[:, self.curr_fab_index : self.curr_fab_index + BS]
+
+            self.curr_fab_index += BS
+
+        # print("dummy_index = {} | block_index = {}, entry_index = {}, fab_index = {}-{}".format(
+        #        dummy_index, self.curr_json_index, self.curr_entry_index, self.curr_fab_index - BS, self.curr_fab_index))
+
+        # print("\ttrainDataSet: before fab", gc.get_count())
+        f = torch.Tensor(fab[0]).view(BS, 256, 128)
+        a = torch.Tensor(fab[1]).view(BS, 256, 128)
+        b = torch.Tensor(fab[2]).view(BS, 256, 128)
+
+        # print("\ttrainDataSet: after getitem", gc.get_count())
+
+        return f, a, b
+
+class testDataSet(BlockBasedDataSet):
+    # 不用考虑batch了，直接一个一个读取
+    # 从block中，取出entry
+    # 从entry中，取出一系列f-a-b
+    def __init__(self):
+        print("testDataSet: feature blocks: ", len(feat_test_block))
+        super(testDataSet, self).__init__(test_dir, feat_test_block, spec_test_blocks, gen_fab_random_mode=False)
+
+    def __len__(self):
+        return ENTRIES_PER_JSON * SPEC_TEST_JSONS * ALL_SAMPLES_PER_ENTRY
+
+    def __getitem__(self, index):
+
+        print("\ttestDataSet: before getitem", gc.get_count())
+
+        # block号
+        newest_json_index = index // (ENTRIES_PER_JSON * ALL_SAMPLES_PER_ENTRY)
+        entry_offset = index % (ENTRIES_PER_JSON * ALL_SAMPLES_PER_ENTRY)
+        newest_entry_index = entry_offset // ALL_SAMPLES_PER_ENTRY
+        newest_fab_index = entry_offset % ALL_SAMPLES_PER_ENTRY
+
+        print("json index = {}, newest_entry_index = {}, fab_offset = {}".format(
+            newest_json_index, newest_entry_index, newest_fab_index)
+        )
+
+        if not (self.curr_json_index == newest_json_index):
+            self.curr_json_index = newest_json_index
+            f = open(clean_dir + '{}'.format(cleanfolder[newest_json_index]))
+            self.spec_block = np.array(json.load(f)).transpose(1,0,2,3)
+
+        if not (self.curr_entry_index == newest_entry_index) or not (self.curr_json_index == newest_json_index):
+            self.curr_entry_index = newest_entry_index
+            self.f_a_b = gen_f_a_b(self.spec_block, self.curr_entry_index, self.feat_block, random_mode=False)
+
+        # print(self.f_a_b.shape)
+
+        f = torch.Tensor(self.f_a_b[0, newest_fab_index])
+        a = torch.Tensor(self.f_a_b[1, newest_fab_index])
+        b = torch.Tensor(self.f_a_b[2, newest_fab_index])
+
+        print("\ttestDataSet: after getitem", gc.get_count())
+
+        return f, a, b
+
+>>>>>>> origin:MultisourceNet.py
 
 #=============================================
 #        Define Dataloader
